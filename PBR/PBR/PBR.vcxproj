@@ -116,7 +116,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>E:\VisualStudio\BoomBoomEngine\Dependencies\glm;E:\VisualStudio\BoomBoomEngine\Dependencies\glfw-3.3.2.bin.WIN64\include;E:\VisualStudio\BoomBoomEngine\Dependencies\glew-2.1.0\include;E:\VisualStudio\BoomBoomEngine\Dependencies\stb_image;E:\VisualStudio\BoomBoomEngine\Dependencies\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>E:\VisualStudio\PBRDx12\PBR\include;E:\VisualStudio\BoomBoomEngine\Dependencies\glm;E:\VisualStudio\BoomBoomEngine\Dependencies\glfw-3.3.2.bin.WIN64\include;E:\VisualStudio\BoomBoomEngine\Dependencies\glew-2.1.0\include;E:\VisualStudio\BoomBoomEngine\Dependencies\stb_image;E:\VisualStudio\BoomBoomEngine\Dependencies\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -133,7 +133,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>E:\VisualStudio\BoomBoomEngine\Dependencies\glm;E:\VisualStudio\BoomBoomEngine\Dependencies\glfw-3.3.2.bin.WIN64\include;E:\VisualStudio\BoomBoomEngine\Dependencies\glew-2.1.0\include;E:\VisualStudio\BoomBoomEngine\Dependencies\stb_image;E:\VisualStudio\BoomBoomEngine\Dependencies\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>E:\VisualStudio\PBRDx12\PBR\include;E:\VisualStudio\BoomBoomEngine\Dependencies\glm;E:\VisualStudio\BoomBoomEngine\Dependencies\glfw-3.3.2.bin.WIN64\include;E:\VisualStudio\BoomBoomEngine\Dependencies\glew-2.1.0\include;E:\VisualStudio\BoomBoomEngine\Dependencies\stb_image;E:\VisualStudio\BoomBoomEngine\Dependencies\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -145,7 +145,18 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Common\d3d12App.cpp" />
+    <ClCompile Include="Common\image.cpp" />
+    <ClCompile Include="Common\mesh.cpp" />
+    <ClCompile Include="Common\utils.cpp" />
     <ClCompile Include="main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Common\d3d12App.h" />
+    <ClInclude Include="Common\image.h" />
+    <ClInclude Include="Common\mesh.h" />
+    <ClInclude Include="Common\Setting.h" />
+    <ClInclude Include="Common\utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
