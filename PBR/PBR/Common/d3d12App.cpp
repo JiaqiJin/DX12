@@ -151,4 +151,202 @@ namespace D3D12
 		return window;
 	}
 
+	void Renderer::shutdown()
+	{
+		waitForGPU();
+		CloseHandle(m_fenceCompletionEvent);
+	}
+
+	void Renderer::setup()
+	{
+		CD3DX12_STATIC_SAMPLER_DESC defaultSamplerDesc{ 0, D3D12_FILTER_ANISOTROPIC };
+		defaultSamplerDesc.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+		CD3DX12_STATIC_SAMPLER_DESC computeSamplerDesc{ 0, D3D12_FILTER_MIN_MAG_MIP_LINEAR };
+		defaultSamplerDesc.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+		//Create default command list
+		if (FAILED(m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_commandAllocators[0].Get(), nullptr, IID_PPV_ARGS(&m_commandList)))) {
+			throw std::runtime_error("Failed to create direct command list");
+		}
+
+		//Create root signature and pipeline for tone mapping
+		{
+			ComPtr<ID3DBlob> tonemapVS = compileShader("shaders/hlsl/tonemap.hlsl", "main_vs", "vs_5_0");
+			ComPtr<ID3DBlob> tonemapPS = compileShader("shaders/hlsl/tonemap.hlsl", "main_ps", "ps_5_0");
+
+			const CD3DX12_DESCRIPTOR_RANGE1 descriptorRanges[] = {
+			{D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC_WHILE_SET_AT_EXECUTE},
+			};
+
+			CD3DX12_ROOT_PARAMETER1 rootParameters[1];
+			rootParameters[0].InitAsDescriptorTable(1, &descriptorRanges[0], D3D12_SHADER_VISIBILITY_PIXEL);
+			CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC signatureDesc = {};
+			signatureDesc.Init_1_1(1, rootParameters, 1, &computeSamplerDesc, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT | D3D12_ROOT_SIGNATURE_FLAG_DENY_VERTEX_SHADER_ROOT_ACCESS);
+			m_tonemapRootSignature = createRootSignature(signatureDesc);
+
+			D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
+			psoDesc.pRootSignature = m_tonemapRootSignature.Get();
+			psoDesc.VS = CD3DX12_SHADER_BYTECODE(tonemapVS.Get());
+			psoDesc.PS = CD3DX12_SHADER_BYTECODE(tonemapPS.Get());
+			psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC{ D3D12_DEFAULT };
+			psoDesc.RasterizerState.FrontCounterClockwise = true;
+			psoDesc.BlendState = CD3DX12_BLEND_DESC{ D3D12_DEFAULT };
+			psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+			psoDesc.NumRenderTargets = 1;
+			psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+			psoDesc.SampleDesc.Count = 1;
+			psoDesc.SampleMask = UINT_MAX;
+
+			if (FAILED(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_tonemapPipelineState)))) {
+				throw std::runtime_error("Failed to create tonemap pipeline state");
+			}
+		}
+
+		// Create root signature & pipeline configuration for rendering PBR model.
+		{
+			const std::vector<D3D12_INPUT_ELEMENT_DESC> meshInputLayout = {
+			{ "POSITION",  0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+			{ "NORMAL",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+			{ "TANGENT",   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+			{ "BITANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 36, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+			{ "TEXCOORD",  0, DXGI_FORMAT_R32G32_FLOAT,    0, 48, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+			};
+
+			ComPtr<ID3DBlob> pbrVS = compileShader("shaders/hlsl/pbr.hlsl", "main_vs", "vs_5_0");
+			ComPtr<ID3DBlob> pbrPS = compileShader("shaders/hlsl/pbr.hlsl", "main_ps", "ps_5_0");
+		}
+	}
+
+	void Renderer::render(GLFWwindow* window, const ViewSettings& view, const SceneSettings& scene)
+	{
+	
+	}
+
+	DescriptorHeap Renderer::createDescriptorHeap(const D3D12_DESCRIPTOR_HEAP_DESC& desc) const
+	{
+		DescriptorHeap heap;
+		if (FAILED(m_device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&heap.heap)))) {
+			throw std::runtime_error("Failed to create descriptor heap");
+		}
+		heap.numDescriptorsAllocated = 0;
+		heap.numDescriptorsInHeap = desc.NumDescriptors;
+		heap.descriptorSize = m_device->GetDescriptorHandleIncrementSize(desc.Type);
+		return heap;
+	}
+
+	MeshBuffer Renderer::createMeshBuffer(const std::shared_ptr<Mesh>& mesh) const
+	{
+		MeshBuffer buffer;
+		buffer.numElements = static_cast<UINT>(mesh->faces().size() * 3);
+
+		const size_t vertexDataSize = mesh->vertices().size() * sizeof(Mesh::Vertex);
+		const size_t indexDataSize = mesh->faces().size() * sizeof(Mesh::Face);
+
+		// Create GPU resources & initialize view structures.
+
+		if (FAILED(m_device->CreateCommittedResource(
+			&CD3DX12_HEAP_PROPERTIES{ D3D12_HEAP_TYPE_DEFAULT },
+			D3D12_HEAP_FLAG_NONE,
+			&CD3DX12_RESOURCE_DESC::Buffer(vertexDataSize),
+			D3D12_RESOURCE_STATE_COPY_DEST,
+			nullptr,
+			IID_PPV_ARGS(&buffer.vertexBuffer))))
+		{
+			throw std::runtime_error("Failed to create vertex buffer");
+		}
+		buffer.vbv.BufferLocation = buffer.vertexBuffer->GetGPUVirtualAddress();
+		buffer.vbv.SizeInBytes = static_cast<UINT>(vertexDataSize);
+		buffer.vbv.StrideInBytes = sizeof(Mesh::Vertex);
+
+		if (FAILED(m_device->CreateCommittedResource(
+			&CD3DX12_HEAP_PROPERTIES{ D3D12_HEAP_TYPE_DEFAULT },
+			D3D12_HEAP_FLAG_NONE,
+			&CD3DX12_RESOURCE_DESC::Buffer(indexDataSize),
+			D3D12_RESOURCE_STATE_COPY_DEST,
+			nullptr,
+			IID_PPV_ARGS(&buffer.indexBuffer))))
+		{
+			throw std::runtime_error("Failed to create index buffer");
+		}
+		buffer.ibv.BufferLocation = buffer.indexBuffer->GetGPUVirtualAddress();
+		buffer.ibv.SizeInBytes = static_cast<UINT>(indexDataSize);
+		buffer.ibv.Format = DXGI_FORMAT_R32_UINT;
+
+		// Create and upload to CPU accessible staging buffers.
+		StagingBuffer vertexStagingBuffer;
+		{
+			const D3D12_SUBRESOURCE_DATA data = { mesh->vertices().data() };
+			vertexStagingBuffer = createStagingBuffer(buffer.vertexBuffer, 0, 1, &data);
+		}
+		StagingBuffer indexStagingBuffer;
+		{
+			const D3D12_SUBRESOURCE_DATA data = { mesh->faces().data() };
+			indexStagingBuffer = createStagingBuffer(buffer.indexBuffer, 0, 1, &data);
+		}
+
+		// Enqueue upload to the GPU.
+		m_commandList->CopyResource(buffer.vertexBuffer.Get(), vertexStagingBuffer.buffer.Get());
+		m_commandList->CopyResource(buffer.indexBuffer.Get(), indexStagingBuffer.buffer.Get());
+
+		const D3D12_RESOURCE_BARRIER barriers[] =
+		{
+			CD3DX12_RESOURCE_BARRIER::Transition(buffer.vertexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER),
+			CD3DX12_RESOURCE_BARRIER::Transition(buffer.indexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER)
+		};
+	
+		m_commandList->ResourceBarrier(2, barriers);
+
+		// Execute graphics command list and wait for GPU to finish.
+		executeCommandList();
+		waitForGPU();
+
+		return buffer;
+	}
+
+	UploadBuffer Renderer::createUploadBuffer(UINT capacity) const
+	{
+		UploadBuffer buffer;
+		buffer.cursor = 0;
+		buffer.capacity = capacity;
+
+		if (FAILED(m_device->CreateCommittedResource(
+			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+			D3D12_HEAP_FLAG_NONE,
+			&CD3DX12_RESOURCE_DESC::Buffer(capacity),
+			D3D12_RESOURCE_STATE_GENERIC_READ,
+			nullptr,
+			IID_PPV_ARGS(&buffer.buffer))))
+		{
+			throw std::runtime_error("Failed to create GPU upload buffer");
+		}
+		if (FAILED(buffer.buffer->Map(0, &CD3DX12_RANGE{ 0, 0 }, reinterpret_cast<void**>(&buffer.cpuAddress)))) {
+			throw std::runtime_error("Failed to map GPU upload buffer to host address space");
+		}
+		buffer.gpuAddress = buffer.buffer->GetGPUVirtualAddress();
+		return buffer;
+	}
+
+	ComPtr<ID3DBlob> Renderer::compileShader(const std::string& filename, const std::string& entryPoint, const std::string& profile)
+	{
+		UINT flags = D3DCOMPILE_ENABLE_STRICTNESS;
+#if _DEBUG
+		flags |= D3DCOMPILE_DEBUG;
+		flags |= D3DCOMPILE_SKIP_OPTIMIZATION;
+#endif
+
+		ComPtr<ID3DBlob> shader;
+		ComPtr<ID3DBlob> errorBlob;
+
+		std::printf("Compiling HLSL shader: %s [%s]\n", filename.c_str(), entryPoint.c_str());
+
+		if (FAILED(D3DCompileFromFile(Utility::convertToUTF16(filename).c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE, entryPoint.c_str(), profile.c_str(), flags, 0, &shader, &errorBlob))) {
+			std::string errorMsg = "Shader compilation failed: " + filename;
+			if (errorBlob) {
+				errorMsg += std::string("\n") + static_cast<const char*>(errorBlob->GetBufferPointer());
+			}
+			throw std::runtime_error(errorMsg);
+		}
+		return shader;
+	}
 } // end namespace

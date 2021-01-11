@@ -107,7 +107,7 @@ namespace D3D12
 		ComPtr<ID3D12Resource> indexBuffer;
 		D3D12_VERTEX_BUFFER_VIEW vbv;
 		D3D12_INDEX_BUFFER_VIEW ibv;
-		UINT numElement;
+		UINT numElements;
 	};
 
 	struct FrameBuffer

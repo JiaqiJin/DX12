@@ -42,7 +42,7 @@ namespace D3D12
 		}
 
 		void executeCommandList(bool reset = true) const;
-		void waitForGPU();
+		void waitForGPU() const;
 		void presentFrame();
 
 		static ComPtr<IDXGIAdapter1> getAdapter(const ComPtr<IDXGIFactory4>& factory);
