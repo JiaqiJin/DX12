@@ -25,7 +25,7 @@ namespace D3D12
 
 		Texture createTexture(UINT width, UINT height, UINT depth, DXGI_FORMAT format, UINT levels = 0);
 		Texture createTexture(const std::shared_ptr<class Image>& image, DXGI_FORMAT format, UINT levels = 0);
-		void generateMipmap(const Texture& texture);
+		void generateMipmaps(const Texture& texture);
 
 		void createTextureSRV(Texture& texture, D3D12_SRV_DIMENSION dimension, UINT mostDetailedMip = 0, UINT mipLevels = 0);
 		void createTextureUAV(Texture& texture, UINT mipSlice);

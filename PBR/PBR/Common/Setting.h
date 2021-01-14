@@ -1,5 +1,5 @@
 #pragma once
-
+/*https://software.intel.com/content/www/us/en/develop/articles/tutorial-migrating-your-apps-to-directx-12-part-3.html*/
 #include <memory>
 #include <d3d12.h>
 #include <dxgi1_4.h>
@@ -82,6 +82,7 @@ namespace D3D12
 	{
 		ComPtr<ID3D12Resource> buffer;
 		UINT firstSubresource;
+		std::vector<D3D12_PLACED_SUBRESOURCE_FOOTPRINT> layouts;
 		UINT numSubresources;
 	};
 
