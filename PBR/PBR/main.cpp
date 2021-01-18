@@ -1,5 +1,4 @@
-﻿#include <iostream>
-/*
+﻿/*
 * https://www.braynzarsoft.net/viewtutorial/q16390-03-initializing-directx-12
 *
 PSO
@@ -22,7 +21,20 @@ http://diligentgraphics.com/diligent-engine/architecture/d3d12/managing-descript
 当我们提交一个绘制命令的时候，我们需要绑定资源到渲染管线上，这样GPU才能获取到资源。
 但是，GPU资源不是直接被绑定的，而是通过一种引用的方式来绑定。这个资源描述符（descriptor）就是用来引用资源的工具。
 */
+#include <cstdio>
+#include <string>
+#include <memory>
+#include <vector>
+
+#include "Common/application.h"
+
+#include "Common/d3d12App.h"
+
+using namespace D3D12;
+
 int main()
 {
-	return 0;
+	Renderer* renderer = new D3D12::Renderer;
+
+	Application().run(std::unique_ptr<Renderer>{ renderer });
 }

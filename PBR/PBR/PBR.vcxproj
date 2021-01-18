@@ -114,15 +114,16 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>E:\VisualStudio\PBRDx12\PBR\include;E:\VisualStudio\BoomBoomEngine\Dependencies\glm;E:\VisualStudio\BoomBoomEngine\Dependencies\glfw-3.3.2.bin.WIN64\include;E:\VisualStudio\BoomBoomEngine\Dependencies\glew-2.1.0\include;E:\VisualStudio\BoomBoomEngine\Dependencies\stb_image;E:\VisualStudio\BoomBoomEngine\Dependencies\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>E:\VisualStudio\BoomBoomEngine\Dependencies\glfw-3.3.2.bin.WIN64\lib-vc2019;E:\VisualStudio\BoomBoomEngine\Dependencies\glew-2.1.0\lib\Release\x64;E:\VisualStudio\BoomBoomEngine\Dependencies\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>opengl32.lib;glfw3.lib;glew32s.lib;assimp-vc140-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>dxguid.lib;dxgi.lib;d3d12.lib;d3dcompiler.lib;opengl32.lib;glfw3.lib;glew32s.lib;assimp-vc140-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -131,20 +132,22 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>E:\VisualStudio\PBRDx12\PBR\include;E:\VisualStudio\BoomBoomEngine\Dependencies\glm;E:\VisualStudio\BoomBoomEngine\Dependencies\glfw-3.3.2.bin.WIN64\include;E:\VisualStudio\BoomBoomEngine\Dependencies\glew-2.1.0\include;E:\VisualStudio\BoomBoomEngine\Dependencies\stb_image;E:\VisualStudio\BoomBoomEngine\Dependencies\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>E:\VisualStudio\BoomBoomEngine\Dependencies\glfw-3.3.2.bin.WIN64\lib-vc2019;E:\VisualStudio\BoomBoomEngine\Dependencies\glew-2.1.0\lib\Release\x64;E:\VisualStudio\BoomBoomEngine\Dependencies\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>opengl32.lib;glfw3.lib;glew32s.lib;assimp-vc140-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>dxguid.lib;dxgi.lib;d3d12.lib;d3dcompiler.lib;opengl32.lib;glfw3.lib;glew32s.lib;assimp-vc140-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Common\application.cpp" />
     <ClCompile Include="Common\d3d12App.cpp" />
     <ClCompile Include="Common\image.cpp" />
     <ClCompile Include="Common\mesh.cpp" />
@@ -152,6 +155,7 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Common\application.h" />
     <ClInclude Include="Common\d3d12App.h" />
     <ClInclude Include="Common\image.h" />
     <ClInclude Include="Common\mesh.h" />

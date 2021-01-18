@@ -1,5 +1,5 @@
 #pragma once
-/*https://software.intel.com/content/www/us/en/develop/articles/tutorial-migrating-your-apps-to-directx-12-part-3.html*/
+/* https://software.intel.com/content/www/us/en/develop/articles/tutorial-migrating-your-apps-to-directx-12-part-3.html */
 #include <memory>
 #include <d3d12.h>
 #include <dxgi1_4.h>
@@ -7,6 +7,10 @@
 
 #include <glm/mat4x4.hpp>
 #include <glm/glm.hpp>
+
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <GLFW/glfw3.h>
+#include <GLFW/glfw3native.h>
 
 struct ViewSettings
 {
@@ -32,30 +36,29 @@ struct SceneSettings
 namespace D3D12
 {
 	using Microsoft::WRL::ComPtr;
+	using namespace std;
 
-	struct Descriptor_Handle
+	struct Descriptor
 	{
 		D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle;
 		D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle;
 	};
 
-	struct DescriptorHeap//tells shaders where to find the resource, and how to interpret the data in the resource.
+	struct DescriptorHeap
 	{
 		ComPtr<ID3D12DescriptorHeap> heap;
 		UINT descriptorSize;
 		UINT numDescriptorsInHeap;
 		UINT numDescriptorsAllocated;
 
-		Descriptor_Handle alloc()
+		Descriptor alloc()
 		{
 			return (*this)[numDescriptorsAllocated++];
 		}
-
-		Descriptor_Handle operator[](UINT index) const
+		Descriptor operator[](UINT index) const
 		{
 			assert(index < numDescriptorsInHeap);
-			return
-			{
+			return {
 				D3D12_CPU_DESCRIPTOR_HANDLE{heap->GetCPUDescriptorHandleForHeapStart().ptr + index * descriptorSize},
 				D3D12_GPU_DESCRIPTOR_HANDLE{heap->GetGPUDescriptorHandleForHeapStart().ptr + index * descriptorSize}
 			};
@@ -68,21 +71,19 @@ namespace D3D12
 			: heap(heap)
 			, mark(heap.numDescriptorsAllocated)
 		{}
-
 		~DescriptorHeapMark()
 		{
 			heap.numDescriptorsAllocated = mark;
 		}
-
 		DescriptorHeap& heap;
 		const UINT mark;
 	};
 
 	struct StagingBuffer
 	{
+		std::vector<D3D12_PLACED_SUBRESOURCE_FOOTPRINT> layouts;
 		ComPtr<ID3D12Resource> buffer;
 		UINT firstSubresource;
-		std::vector<D3D12_PLACED_SUBRESOURCE_FOOTPRINT> layouts;
 		UINT numSubresources;
 	};
 
@@ -115,9 +116,9 @@ namespace D3D12
 	{
 		ComPtr<ID3D12Resource> colorTexture;
 		ComPtr<ID3D12Resource> depthStencilTexture;
-		Descriptor_Handle dsv;
-		Descriptor_Handle rtv;
-		Descriptor_Handle srv;
+		Descriptor rtv;
+		Descriptor dsv;
+		Descriptor srv;
 		UINT width, height;
 		UINT samples;
 	};
@@ -125,13 +126,14 @@ namespace D3D12
 	struct SwapChainBuffer
 	{
 		ComPtr<ID3D12Resource> buffer;
-		Descriptor_Handle rtv;
+		Descriptor rtv;
 	};
 
 	struct ConstantBufferView
 	{
 		UploadBufferRegion data;
-		Descriptor_Handle cbv;
+		Descriptor cbv;
+
 		template<typename T> T* as() const
 		{
 			return reinterpret_cast<T*>(data.cpuAddress);
@@ -141,9 +143,8 @@ namespace D3D12
 	struct Texture
 	{
 		ComPtr<ID3D12Resource> texture;
-		Descriptor_Handle srv;
-		//view of an unordered access resource (which can include buffers, textures, and texture arrays, though without multi-sampling)
-		Descriptor_Handle uav;
+		Descriptor srv;
+		Descriptor uav;
 		UINT width, height;
 		UINT levels;
 	};

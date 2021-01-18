@@ -1,3 +1,4 @@
+
 #include <algorithm>
 #include <stdexcept>
 
@@ -5,20 +6,33 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/euler_angles.hpp>
 
-#define GLFW_EXPOSE_NATIVE_WIN32
-#include <GLFW/glfw3.h>
-#include <GLFW/glfw3native.h>
+#include "../Common/mesh.h"
+#include "../Common/image.h"
 
 #include <d3dx12.h>
 #include <d3dcompiler.h>
-
-#include "image.h"
-#include "mesh.h"
-
 #include "d3d12App.h"
 
-namespace D3D12
-{
+#include "application.h"
+
+namespace D3D12 {
+
+	struct TransformCB
+	{
+		glm::mat4 viewProjectionMatrix;
+		glm::mat4 skyProjectionMatrix;
+		glm::mat4 sceneRotationMatrix;
+	};
+
+	struct ShadingCB
+	{
+		struct {
+			glm::vec4 direction;
+			glm::vec4 radiance;
+		} lights[SceneSettings::NumLights];
+		glm::vec4 eyePosition;
+	};
+
 	GLFWwindow* Renderer::initialize(int width, int height, int maxSamples)
 	{
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -60,6 +74,7 @@ namespace D3D12
 			if (FAILED(D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&m_device)))) {
 				throw std::runtime_error("Failed to create D3D12 device");
 			}
+
 		}
 
 		// Create default direct command queue.
@@ -85,11 +100,10 @@ namespace D3D12
 			}
 			swapChain.As(&m_swapChain);
 		}
-
 		m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 		dxgiFactory->MakeWindowAssociation(glfwGetWin32Window(window), DXGI_MWA_NO_ALT_ENTER);
 
-		//Determine max support MSAA level
+		// Determine maximum supported MSAA level.
 		UINT samples;
 		for (samples = maxSamples; samples > 1; samples /= 2) {
 			D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS mqlColor = { DXGI_FORMAT_R16G16B16A16_FLOAT, samples };
@@ -108,21 +122,18 @@ namespace D3D12
 			m_rootSignatureVersion = rootSignatureFeature.HighestVersion;
 		}
 
-		//Create descripto heaps
+		// Create descriptor heaps.
 		m_descHeapRTV = createDescriptorHeap({ D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 16, D3D12_DESCRIPTOR_HEAP_FLAG_NONE });
 		m_descHeapDSV = createDescriptorHeap({ D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 16, D3D12_DESCRIPTOR_HEAP_FLAG_NONE });
 		m_descHeapCBV_SRV_UAV = createDescriptorHeap({ D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 128, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE });
 
-		//Create per frame resource
-		for (UINT frameIndex = 0; frameIndex < NumFrames; ++frameIndex)
-		{
-			if (FAILED(m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_commandAllocators[frameIndex]))))
-			{
+		// Create per-frame resources.
+		for (UINT frameIndex = 0; frameIndex < NumFrames; ++frameIndex) {
+
+			if (FAILED(m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_commandAllocators[frameIndex])))) {
 				throw std::runtime_error("Failed to create command allocator");
 			}
-
-			if (FAILED(m_swapChain->GetBuffer(frameIndex, IID_PPV_ARGS(&m_backbuffers[frameIndex].buffer))))
-			{
+			if (FAILED(m_swapChain->GetBuffer(frameIndex, IID_PPV_ARGS(&m_backbuffers[frameIndex].buffer)))) {
 				throw std::runtime_error("Failed to retrieve swap chain back buffer");
 			}
 
@@ -140,8 +151,7 @@ namespace D3D12
 
 		// Create frame synchronization objects.
 		{
-			if (FAILED(m_device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence))))
-			{
+			if (FAILED(m_device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)))) {
 				throw std::runtime_error("Failed to create fence object");
 			}
 			m_fenceCompletionEvent = CreateEvent(nullptr, false, false, nullptr);
@@ -165,20 +175,24 @@ namespace D3D12
 		CD3DX12_STATIC_SAMPLER_DESC computeSamplerDesc{ 0, D3D12_FILTER_MIN_MAG_MIP_LINEAR };
 		defaultSamplerDesc.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
-		//Create default command list
+		CD3DX12_STATIC_SAMPLER_DESC spBRDF_SamplerDesc{ 1, D3D12_FILTER_MIN_MAG_MIP_LINEAR };
+		spBRDF_SamplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+		spBRDF_SamplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+		spBRDF_SamplerDesc.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+		// Create default command list.
 		if (FAILED(m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_commandAllocators[0].Get(), nullptr, IID_PPV_ARGS(&m_commandList)))) {
 			throw std::runtime_error("Failed to create direct command list");
 		}
 
-		//Create root signature and pipeline for tone mapping
+		// Create root signature & pipeline configuration for tonemapping.
 		{
 			ComPtr<ID3DBlob> tonemapVS = compileShader("shaders/hlsl/tonemap.hlsl", "main_vs", "vs_5_0");
 			ComPtr<ID3DBlob> tonemapPS = compileShader("shaders/hlsl/tonemap.hlsl", "main_ps", "ps_5_0");
 
 			const CD3DX12_DESCRIPTOR_RANGE1 descriptorRanges[] = {
-			{D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC_WHILE_SET_AT_EXECUTE},
+				{D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC_WHILE_SET_AT_EXECUTE},
 			};
-
 			CD3DX12_ROOT_PARAMETER1 rootParameters[1];
 			rootParameters[0].InitAsDescriptorTable(1, &descriptorRanges[0], D3D12_SHADER_VISIBILITY_PIXEL);
 			CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC signatureDesc = {};
@@ -206,21 +220,407 @@ namespace D3D12
 		// Create root signature & pipeline configuration for rendering PBR model.
 		{
 			const std::vector<D3D12_INPUT_ELEMENT_DESC> meshInputLayout = {
-			{ "POSITION",  0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-			{ "NORMAL",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-			{ "TANGENT",   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-			{ "BITANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 36, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-			{ "TEXCOORD",  0, DXGI_FORMAT_R32G32_FLOAT,    0, 48, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+				{ "POSITION",  0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+				{ "NORMAL",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+				{ "TANGENT",   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+				{ "BITANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 36, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+				{ "TEXCOORD",  0, DXGI_FORMAT_R32G32_FLOAT,    0, 48, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 			};
 
 			ComPtr<ID3DBlob> pbrVS = compileShader("shaders/hlsl/pbr.hlsl", "main_vs", "vs_5_0");
 			ComPtr<ID3DBlob> pbrPS = compileShader("shaders/hlsl/pbr.hlsl", "main_ps", "ps_5_0");
+
+			const CD3DX12_DESCRIPTOR_RANGE1 descriptorRanges[] = {
+				{D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC},
+				{D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 7, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC},
+			};
+			CD3DX12_ROOT_PARAMETER1 rootParameters[3];
+			rootParameters[0].InitAsDescriptorTable(1, &descriptorRanges[0], D3D12_SHADER_VISIBILITY_VERTEX);
+			rootParameters[1].InitAsDescriptorTable(1, &descriptorRanges[0], D3D12_SHADER_VISIBILITY_PIXEL);
+			rootParameters[2].InitAsDescriptorTable(1, &descriptorRanges[1], D3D12_SHADER_VISIBILITY_PIXEL);
+			D3D12_STATIC_SAMPLER_DESC staticSamplers[2];
+			staticSamplers[0] = defaultSamplerDesc;
+			staticSamplers[1] = spBRDF_SamplerDesc;
+			CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC signatureDesc;
+			signatureDesc.Init_1_1(3, rootParameters, 2, staticSamplers, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+			m_pbrRootSignature = createRootSignature(signatureDesc);
+
+			D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
+			psoDesc.pRootSignature = m_pbrRootSignature.Get();
+			psoDesc.InputLayout = { meshInputLayout.data(), (UINT)meshInputLayout.size() };
+			psoDesc.VS = CD3DX12_SHADER_BYTECODE(pbrVS.Get());
+			psoDesc.PS = CD3DX12_SHADER_BYTECODE(pbrPS.Get());
+			psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+			psoDesc.RasterizerState.FrontCounterClockwise = true;
+			psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+			psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+			psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+			psoDesc.NumRenderTargets = 1;
+			psoDesc.RTVFormats[0] = DXGI_FORMAT_R16G16B16A16_FLOAT;
+			psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+			psoDesc.SampleDesc.Count = m_framebuffers[0].samples;
+			psoDesc.SampleMask = UINT_MAX;
+
+			if (FAILED(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pbrPipelineState)))) {
+				throw std::runtime_error("Failed to create graphics pipeline state for PBR model");
+			}
 		}
+
+		// Load PBR model assets.
+		m_pbrModel = createMeshBuffer(Mesh::fromFile("meshes/cerberus.fbx"));
+
+		m_albedoTexture = createTexture(Image::fromFile("textures/cerberus_A.png"), DXGI_FORMAT_R8G8B8A8_UNORM_SRGB);
+		m_normalTexture = createTexture(Image::fromFile("textures/cerberus_N.png"), DXGI_FORMAT_R8G8B8A8_UNORM);
+		m_metalnessTexture = createTexture(Image::fromFile("textures/cerberus_M.png", 1), DXGI_FORMAT_R8_UNORM);
+		m_roughnessTexture = createTexture(Image::fromFile("textures/cerberus_R.png", 1), DXGI_FORMAT_R8_UNORM);
+
+		// Create root signature & pipeline configuration for rendering skybox.
+		{
+			const std::vector<D3D12_INPUT_ELEMENT_DESC> skyboxInputLayout = {
+				{ "POSITION",  0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+			};
+
+			ComPtr<ID3DBlob> skyboxVS = compileShader("shaders/hlsl/skybox.hlsl", "main_vs", "vs_5_0");
+			ComPtr<ID3DBlob> skyboxPS = compileShader("shaders/hlsl/skybox.hlsl", "main_ps", "ps_5_0");
+
+
+			const CD3DX12_DESCRIPTOR_RANGE1 descriptorRanges[] = {
+				{D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC},
+				{D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC},
+			};
+			CD3DX12_ROOT_PARAMETER1 rootParameters[2];
+			rootParameters[0].InitAsDescriptorTable(1, &descriptorRanges[0], D3D12_SHADER_VISIBILITY_VERTEX);
+			rootParameters[1].InitAsDescriptorTable(1, &descriptorRanges[1], D3D12_SHADER_VISIBILITY_PIXEL);
+			CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC signatureDesc = {};
+			signatureDesc.Init_1_1(2, rootParameters, 1, &defaultSamplerDesc, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+			m_skyboxRootSignature = createRootSignature(signatureDesc);
+
+			D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
+			psoDesc.pRootSignature = m_skyboxRootSignature.Get();
+			psoDesc.InputLayout = { skyboxInputLayout.data(), (UINT)skyboxInputLayout.size() };
+			psoDesc.VS = CD3DX12_SHADER_BYTECODE(skyboxVS.Get());
+			psoDesc.PS = CD3DX12_SHADER_BYTECODE(skyboxPS.Get());
+			psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+			psoDesc.RasterizerState.FrontCounterClockwise = true;
+			psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+			psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+			psoDesc.NumRenderTargets = 1;
+			psoDesc.RTVFormats[0] = DXGI_FORMAT_R16G16B16A16_FLOAT;
+			psoDesc.SampleDesc.Count = m_framebuffers[0].samples;
+			psoDesc.SampleMask = UINT_MAX;
+
+			if (FAILED(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_skyboxPipelineState)))) {
+				throw std::runtime_error("Failed to create graphics pipeline state for skybox");
+			}
+		}
+
+		// Load skybox assets.
+		m_skybox = createMeshBuffer(Mesh::fromFile("meshes/skybox.obj"));
+
+		// Load & pre-process environment map.
+		{
+			ComPtr<ID3D12RootSignature> computeRootSignature;
+
+			ID3D12DescriptorHeap* computeDescriptorHeaps[] = {
+				m_descHeapCBV_SRV_UAV.heap.Get()
+			};
+
+			// Create universal compute root signature.
+			{
+				const CD3DX12_DESCRIPTOR_RANGE1 descriptorRanges[] = {
+					{D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC},
+					{D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC_WHILE_SET_AT_EXECUTE},
+				};
+				CD3DX12_ROOT_PARAMETER1 rootParameters[3];
+				rootParameters[0].InitAsDescriptorTable(1, &descriptorRanges[0]);
+				rootParameters[1].InitAsDescriptorTable(1, &descriptorRanges[1]);
+				rootParameters[2].InitAsConstants(1, 0);
+				CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC signatureDesc;
+				signatureDesc.Init_1_1(3, rootParameters, 1, &computeSamplerDesc);
+				computeRootSignature = createRootSignature(signatureDesc);
+			}
+
+			m_envTexture = createTexture(1024, 1024, 6, DXGI_FORMAT_R16G16B16A16_FLOAT);
+			{
+				DescriptorHeapMark mark(m_descHeapCBV_SRV_UAV);
+
+				// Unfiltered environment cube map (temporary).
+				Texture envTextureUnfiltered = createTexture(1024, 1024, 6, DXGI_FORMAT_R16G16B16A16_FLOAT);
+				createTextureUAV(envTextureUnfiltered, 0);
+
+				// Load & convert equirectangular environment map to cubemap texture
+				{
+					DescriptorHeapMark mark(m_descHeapCBV_SRV_UAV);
+
+					Texture envTextureEquirect = createTexture(Image::fromFile("environment.hdr"), DXGI_FORMAT_R32G32B32A32_FLOAT, 1);
+
+					ComPtr<ID3D12PipelineState> pipelineState;
+					ComPtr<ID3DBlob> equirectToCubemapShader = compileShader("shaders/hlsl/equirect2cube.hlsl", "main", "cs_5_0");
+
+					D3D12_COMPUTE_PIPELINE_STATE_DESC psoDesc = {};
+					psoDesc.pRootSignature = computeRootSignature.Get();
+					psoDesc.CS = CD3DX12_SHADER_BYTECODE(equirectToCubemapShader.Get());
+					if (FAILED(m_device->CreateComputePipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState)))) {
+						throw std::runtime_error("Failed to create compute pipeline state (equirect2cube)");
+					}
+
+					m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(envTextureUnfiltered.texture.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
+					m_commandList->SetDescriptorHeaps(1, computeDescriptorHeaps);
+					m_commandList->SetPipelineState(pipelineState.Get());
+					m_commandList->SetComputeRootSignature(computeRootSignature.Get());
+					m_commandList->SetComputeRootDescriptorTable(0, envTextureEquirect.srv.gpuHandle);
+					m_commandList->SetComputeRootDescriptorTable(1, envTextureUnfiltered.uav.gpuHandle);
+					m_commandList->Dispatch(m_envTexture.width / 32, m_envTexture.height / 32, 6);
+					m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(envTextureUnfiltered.texture.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON));
+
+					// This will implicitly execute command list & wait for GPU to finish.
+					generateMipmaps(envTextureUnfiltered);
+				}
+
+				// Compute pre-filtered specular environment map.
+				{
+					DescriptorHeapMark mark(m_descHeapCBV_SRV_UAV);
+
+					ComPtr<ID3D12PipelineState> pipelineState;
+					ComPtr<ID3DBlob> spmapShader = compileShader("shaders/hlsl/spmap.hlsl", "main", "cs_5_0");
+
+					D3D12_COMPUTE_PIPELINE_STATE_DESC psoDesc = {};
+					psoDesc.pRootSignature = computeRootSignature.Get();
+					psoDesc.CS = CD3DX12_SHADER_BYTECODE{ spmapShader.Get() };
+					if (FAILED(m_device->CreateComputePipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState)))) {
+						throw std::runtime_error("Failed to create compute pipeline state (spmap)");
+					}
+
+					// Copy 0th mipmap level into destination environment map.
+					const D3D12_RESOURCE_BARRIER preCopyBarriers[] = {
+						CD3DX12_RESOURCE_BARRIER::Transition(m_envTexture.texture.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST),
+						CD3DX12_RESOURCE_BARRIER::Transition(envTextureUnfiltered.texture.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_SOURCE)
+					};
+					const D3D12_RESOURCE_BARRIER postCopyBarriers[] = {
+						CD3DX12_RESOURCE_BARRIER::Transition(m_envTexture.texture.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_UNORDERED_ACCESS),
+						CD3DX12_RESOURCE_BARRIER::Transition(envTextureUnfiltered.texture.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE)
+					};
+					m_commandList->ResourceBarrier(2, preCopyBarriers);
+					for (UINT arraySlice = 0; arraySlice < 6; ++arraySlice) {
+						const UINT subresourceIndex = D3D12CalcSubresource(0, arraySlice, 0, m_envTexture.levels, 6);
+						m_commandList->CopyTextureRegion(&CD3DX12_TEXTURE_COPY_LOCATION{ m_envTexture.texture.Get(), subresourceIndex }, 0, 0, 0, &CD3DX12_TEXTURE_COPY_LOCATION{ envTextureUnfiltered.texture.Get(), subresourceIndex }, nullptr);
+					}
+					m_commandList->ResourceBarrier(2, postCopyBarriers);
+
+					// Pre-filter rest of the mip chain.
+					m_commandList->SetDescriptorHeaps(1, computeDescriptorHeaps);
+					m_commandList->SetPipelineState(pipelineState.Get());
+					m_commandList->SetComputeRootSignature(computeRootSignature.Get());
+					m_commandList->SetComputeRootDescriptorTable(0, envTextureUnfiltered.srv.gpuHandle);
+
+					const float deltaRoughness = 1.0f / max(float(m_envTexture.levels - 1), 1.0f);
+					for (UINT level = 1, size = 512; level < m_envTexture.levels; ++level, size /= 2) {
+						const UINT numGroups = std::max<UINT>(1, size / 32);
+						const float spmapRoughness = level * deltaRoughness;
+
+						createTextureUAV(m_envTexture, level);
+
+						m_commandList->SetComputeRootDescriptorTable(1, m_envTexture.uav.gpuHandle);
+						m_commandList->SetComputeRoot32BitConstants(2, 1, &spmapRoughness, 0);
+						m_commandList->Dispatch(numGroups, numGroups, 6);
+					}
+					m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_envTexture.texture.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON));
+
+					executeCommandList();
+					waitForGPU();
+				}
+			}
+
+			// Compute diffuse irradiance cubemap.
+			m_irmapTexture = createTexture(32, 32, 6, DXGI_FORMAT_R16G16B16A16_FLOAT, 1);
+			{
+				DescriptorHeapMark mark(m_descHeapCBV_SRV_UAV);
+				createTextureUAV(m_irmapTexture, 0);
+
+				ComPtr<ID3D12PipelineState> pipelineState;
+				ComPtr<ID3DBlob> irmapShader = compileShader("shaders/hlsl/irmap.hlsl", "main", "cs_5_0");
+
+				D3D12_COMPUTE_PIPELINE_STATE_DESC psoDesc = {};
+				psoDesc.pRootSignature = computeRootSignature.Get();
+				psoDesc.CS = CD3DX12_SHADER_BYTECODE{ irmapShader.Get() };
+				if (FAILED(m_device->CreateComputePipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState)))) {
+					throw std::runtime_error("Failed to create compute pipeline state (irmap)");
+				}
+
+				m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_irmapTexture.texture.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
+				m_commandList->SetDescriptorHeaps(1, computeDescriptorHeaps);
+				m_commandList->SetPipelineState(pipelineState.Get());
+				m_commandList->SetComputeRootSignature(computeRootSignature.Get());
+				m_commandList->SetComputeRootDescriptorTable(0, m_envTexture.srv.gpuHandle);
+				m_commandList->SetComputeRootDescriptorTable(1, m_irmapTexture.uav.gpuHandle);
+				m_commandList->Dispatch(m_irmapTexture.width / 32, m_irmapTexture.height / 32, 6);
+				m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_irmapTexture.texture.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON));
+
+				executeCommandList();
+				waitForGPU();
+			}
+
+			// Compute Cook-Torrance BRDF 2D LUT for split-sum approximation.
+			m_spBRDF_LUT = createTexture(256, 256, 1, DXGI_FORMAT_R16G16_FLOAT, 1);
+			{
+				DescriptorHeapMark mark(m_descHeapCBV_SRV_UAV);
+				createTextureUAV(m_spBRDF_LUT, 0);
+
+				ComPtr<ID3D12PipelineState> pipelineState;
+				ComPtr<ID3DBlob> spBRDFShader = compileShader("shaders/hlsl/spbrdf.hlsl", "main", "cs_5_0");
+
+				D3D12_COMPUTE_PIPELINE_STATE_DESC psoDesc = {};
+				psoDesc.pRootSignature = computeRootSignature.Get();
+				psoDesc.CS = CD3DX12_SHADER_BYTECODE{ spBRDFShader.Get() };
+				if (FAILED(m_device->CreateComputePipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState)))) {
+					throw std::runtime_error("Failed to create compute pipeline state (spbrdf)");
+				}
+
+				m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_spBRDF_LUT.texture.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
+				m_commandList->SetDescriptorHeaps(1, computeDescriptorHeaps);
+				m_commandList->SetPipelineState(pipelineState.Get());
+				m_commandList->SetComputeRootSignature(computeRootSignature.Get());
+				m_commandList->SetComputeRootDescriptorTable(1, m_spBRDF_LUT.uav.gpuHandle);
+				m_commandList->Dispatch(m_spBRDF_LUT.width / 32, m_spBRDF_LUT.height / 32, 1);
+				m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_spBRDF_LUT.texture.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON));
+
+				executeCommandList();
+				waitForGPU();
+			}
+		}
+
+		// Create 64kB host-mapped buffer in the upload heap for shader constants.
+		m_constantBuffer = createUploadBuffer(64 * 1024);
+
+		// Configure per-frame resources.
+		{
+			std::vector<D3D12_RESOURCE_BARRIER> barriers{ NumFrames };
+			for (UINT frameIndex = 0; frameIndex < NumFrames; ++frameIndex) {
+				m_transformCBVs[frameIndex] = createConstantBufferView<TransformCB>();
+				m_shadingCBVs[frameIndex] = createConstantBufferView<ShadingCB>();
+
+				barriers[frameIndex] = CD3DX12_RESOURCE_BARRIER::Transition(m_resolveFramebuffers[frameIndex].colorTexture.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+			}
+			m_commandList->ResourceBarrier(NumFrames, barriers.data());
+		}
+
+		executeCommandList(false);
+		waitForGPU();
 	}
 
 	void Renderer::render(GLFWwindow* window, const ViewSettings& view, const SceneSettings& scene)
 	{
-	
+		const glm::mat4 projectionMatrix = glm::perspectiveFov(view.fov, float(1024), float(1024), 1.0f, 1000.0f);
+		const glm::mat4 viewRotationMatrix = glm::eulerAngleXY(glm::radians(view.pitch), glm::radians(view.yaw));
+		const glm::mat4 sceneRotationMatrix = glm::eulerAngleXY(glm::radians(scene.pitch), glm::radians(scene.yaw));
+		const glm::mat4 viewMatrix = glm::translate(glm::mat4{ 1.0f }, { 0.0f, 0.0f, -view.distance }) * viewRotationMatrix;
+		const glm::vec3 eyePosition = glm::inverse(viewMatrix)[3];
+
+		const ConstantBufferView& transformCBV = m_transformCBVs[m_frameIndex];
+		const ConstantBufferView& shadingCBV = m_shadingCBVs[m_frameIndex];
+
+		// Update transform constant buffer (for vertex shaders).
+		{
+			TransformCB* transformConstants = transformCBV.as<TransformCB>();
+			transformConstants->viewProjectionMatrix = projectionMatrix * viewMatrix;
+			transformConstants->skyProjectionMatrix = projectionMatrix * viewRotationMatrix;
+			transformConstants->sceneRotationMatrix = sceneRotationMatrix;
+		}
+
+		// Update shading constant buffer (for pixel shader).
+		{
+			ShadingCB* shadingConstants = shadingCBV.as<ShadingCB>();
+			shadingConstants->eyePosition = glm::vec4{ eyePosition, 0.0f };
+			for (int i = 0; i < SceneSettings::NumLights; ++i) {
+				const SceneSettings::Light& light = scene.lights[i];
+				shadingConstants->lights[i].direction = glm::vec4{ light.direction, 0.0f };
+				if (light.enabled) {
+					shadingConstants->lights[i].radiance = glm::vec4{ light.radiance, 0.0f };
+				}
+				else {
+					shadingConstants->lights[i].radiance = glm::vec4{};
+				}
+			}
+		}
+
+		ID3D12CommandAllocator* commandAllocator = m_commandAllocators[m_frameIndex].Get();
+		const SwapChainBuffer& backbuffer = m_backbuffers[m_frameIndex];
+		const FrameBuffer& framebuffer = m_framebuffers[m_frameIndex];
+		const FrameBuffer& resolveFramebuffer = m_resolveFramebuffers[m_frameIndex];
+
+		commandAllocator->Reset();
+		m_commandList->Reset(commandAllocator, m_skyboxPipelineState.Get());
+
+		// Set global state.
+		m_commandList->RSSetViewports(1, &CD3DX12_VIEWPORT{ 0.0f, 0.0f, (FLOAT)framebuffer.width, (FLOAT)framebuffer.height });
+		m_commandList->RSSetScissorRects(1, &CD3DX12_RECT{ 0, 0, (LONG)framebuffer.width, (LONG)framebuffer.height });
+
+		ID3D12DescriptorHeap* descriptorHeaps[] = {
+			m_descHeapCBV_SRV_UAV.heap.Get()
+		};
+		m_commandList->SetDescriptorHeaps(1, descriptorHeaps);
+
+		// If not using MSAA, transition main framebuffer into render target state.
+		if (framebuffer.samples <= 1) {
+			m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(framebuffer.colorTexture.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET));
+		}
+
+		// Prepare for rendering into the main framebuffer.
+		m_commandList->OMSetRenderTargets(1, &framebuffer.rtv.cpuHandle, false, &framebuffer.dsv.cpuHandle);
+		m_commandList->ClearDepthStencilView(framebuffer.dsv.cpuHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+		m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+		// Draw skybox.
+		{
+			m_commandList->SetGraphicsRootSignature(m_skyboxRootSignature.Get());
+			m_commandList->SetGraphicsRootDescriptorTable(0, transformCBV.cbv.gpuHandle);
+			m_commandList->SetGraphicsRootDescriptorTable(1, m_envTexture.srv.gpuHandle);
+
+			m_commandList->IASetVertexBuffers(0, 1, &m_skybox.vbv);
+			m_commandList->IASetIndexBuffer(&m_skybox.ibv);
+
+			m_commandList->DrawIndexedInstanced(m_skybox.numElements, 1, 0, 0, 0);
+		}
+
+		// Draw PBR model.
+		{
+			m_commandList->SetGraphicsRootSignature(m_pbrRootSignature.Get());
+			m_commandList->SetGraphicsRootDescriptorTable(0, transformCBV.cbv.gpuHandle);
+			m_commandList->SetGraphicsRootDescriptorTable(1, shadingCBV.cbv.gpuHandle);
+			m_commandList->SetGraphicsRootDescriptorTable(2, m_albedoTexture.srv.gpuHandle);
+			m_commandList->SetPipelineState(m_pbrPipelineState.Get());
+
+			m_commandList->IASetVertexBuffers(0, 1, &m_pbrModel.vbv);
+			m_commandList->IASetIndexBuffer(&m_pbrModel.ibv);
+
+			m_commandList->DrawIndexedInstanced(m_pbrModel.numElements, 1, 0, 0, 0);
+		}
+
+		// Resolve multisample framebuffer (MSAA) or transition into pixel shader resource state (non-MSAA).
+		if (framebuffer.samples > 1) {
+			resolveFrameBuffer(framebuffer, resolveFramebuffer, DXGI_FORMAT_R16G16B16A16_FLOAT);
+		}
+		else {
+			m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(framebuffer.colorTexture.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
+		}
+
+		// Prepare for rendering directly into a back buffer.
+		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(backbuffer.buffer.Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
+		m_commandList->OMSetRenderTargets(1, &backbuffer.rtv.cpuHandle, false, nullptr);
+
+		// Draw a full screen triangle for postprocessing/tone mapping.
+		{
+			m_commandList->SetGraphicsRootSignature(m_tonemapRootSignature.Get());
+			m_commandList->SetGraphicsRootDescriptorTable(0, resolveFramebuffer.srv.gpuHandle);
+			m_commandList->SetPipelineState(m_tonemapPipelineState.Get());
+
+			m_commandList->DrawInstanced(3, 1, 0, 0);
+		}
+
+		m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(backbuffer.buffer.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
+
+		executeCommandList(false);
+		presentFrame();
 	}
 
 	DescriptorHeap Renderer::createDescriptorHeap(const D3D12_DESCRIPTOR_HEAP_DESC& desc) const
@@ -289,12 +689,10 @@ namespace D3D12
 		m_commandList->CopyResource(buffer.vertexBuffer.Get(), vertexStagingBuffer.buffer.Get());
 		m_commandList->CopyResource(buffer.indexBuffer.Get(), indexStagingBuffer.buffer.Get());
 
-		const D3D12_RESOURCE_BARRIER barriers[] =
-		{
+		const D3D12_RESOURCE_BARRIER barriers[] = {
 			CD3DX12_RESOURCE_BARRIER::Transition(buffer.vertexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER),
 			CD3DX12_RESOURCE_BARRIER::Transition(buffer.indexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER)
 		};
-	
 		m_commandList->ResourceBarrier(2, barriers);
 
 		// Execute graphics command list and wait for GPU to finish.
@@ -342,8 +740,7 @@ namespace D3D12
 		return region;
 	}
 
-	StagingBuffer Renderer::createStagingBuffer(const ComPtr<ID3D12Resource>& resource, UINT firstSubresource, UINT numSubresources, 
-		const D3D12_SUBRESOURCE_DATA* data) const
+	StagingBuffer Renderer::createStagingBuffer(const ComPtr<ID3D12Resource>& resource, UINT firstSubresource, UINT numSubresources, const D3D12_SUBRESOURCE_DATA* data) const
 	{
 		StagingBuffer stagingBuffer;
 		stagingBuffer.firstSubresource = firstSubresource;
@@ -368,8 +765,7 @@ namespace D3D12
 			throw std::runtime_error("Failed to create GPU staging buffer");
 		}
 
-		if (data) // mesh or index data
-		{
+		if (data) {
 			assert(resourceDesc.Dimension != D3D12_RESOURCE_DIMENSION_TEXTURE3D);
 
 			void* bufferMemory;
@@ -377,19 +773,15 @@ namespace D3D12
 				throw std::runtime_error("Failed to map GPU staging buffer to host address space");
 			}
 
-			for (UINT subresource = 0; subresource < numSubresources; ++subresource)
-			{
+			for (UINT subresource = 0; subresource < numSubresources; ++subresource) {
 				uint8_t* subresourceMemory = reinterpret_cast<uint8_t*>(bufferMemory) + stagingBuffer.layouts[subresource].Offset;
-				if (resourceDesc.Dimension == D3D12_RESOURCE_DIMENSION_BUFFER)
-				{
+				if (resourceDesc.Dimension == D3D12_RESOURCE_DIMENSION_BUFFER) {
 					// Generic buffer: Copy everything in one go.
 					std::memcpy(subresourceMemory, data->pData, numBytesTotal);
 				}
-				else
-				{
+				else {
 					// Texture: Copy data line by line.
-					for (UINT row = 0; row < numRows[subresource]; ++row)
-					{
+					for (UINT row = 0; row < numRows[subresource]; ++row) {
 						const uint8_t* srcRowPtr = reinterpret_cast<const uint8_t*>(data[subresource].pData) + row * data[subresource].RowPitch;
 						uint8_t* destRowPtr = subresourceMemory + row * stagingBuffer.layouts[subresource].Footprint.RowPitch;
 						std::memcpy(destRowPtr, srcRowPtr, rowBytes[subresource]);
@@ -398,10 +790,9 @@ namespace D3D12
 			}
 			stagingBuffer.buffer->Unmap(0, nullptr);
 		}
-		
 		return stagingBuffer;
 	}
-	
+
 	Texture Renderer::createTexture(UINT width, UINT height, UINT depth, DXGI_FORMAT format, UINT levels)
 	{
 		assert(depth == 1 || depth == 6);
@@ -433,8 +824,7 @@ namespace D3D12
 		}
 
 		D3D12_SRV_DIMENSION srvDim;
-		switch (depth)
-		{
+		switch (depth) {
 		case 1:  srvDim = D3D12_SRV_DIMENSION_TEXTURE2D; break;
 		case 6:  srvDim = D3D12_SRV_DIMENSION_TEXTURECUBE; break;
 		default: srvDim = D3D12_SRV_DIMENSION_TEXTURE2DARRAY; break;
@@ -446,7 +836,6 @@ namespace D3D12
 	Texture Renderer::createTexture(const std::shared_ptr<Image>& image, DXGI_FORMAT format, UINT levels)
 	{
 		Texture texture = createTexture(image->width(), image->height(), 1, format, levels);
-
 		StagingBuffer textureStagingBuffer;
 		{
 			const D3D12_SUBRESOURCE_DATA data{ image->pixels<void>(), image->pitch() };
@@ -461,6 +850,7 @@ namespace D3D12
 			m_commandList->CopyTextureRegion(&destCopyLocation, 0, 0, 0, &srcCopyLocation, nullptr);
 			m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(texture.texture.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_COMMON, 0));
 		}
+
 		if (texture.levels > 1 && texture.width == texture.height && Utility::isPowerOfTwo(texture.width)) {
 			generateMipmaps(texture);
 		}
@@ -477,13 +867,11 @@ namespace D3D12
 		assert(texture.width == texture.height);
 		assert(Utility::isPowerOfTwo(texture.width));
 
-		if (!m_mipmapGeneration.rootSignature) // root signature, ranger->parameter->version
-		{
+		if (!m_mipmapGeneration.rootSignature) {
 			const CD3DX12_DESCRIPTOR_RANGE1 descriptorRanges[] = {
-			{D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC_WHILE_SET_AT_EXECUTE},
-			{D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC_WHILE_SET_AT_EXECUTE},
+				{D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC_WHILE_SET_AT_EXECUTE},
+				{D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC_WHILE_SET_AT_EXECUTE},
 			};
-
 			CD3DX12_ROOT_PARAMETER1 rootParameters[2];
 			rootParameters[0].InitAsDescriptorTable(1, &descriptorRanges[0]);
 			rootParameters[1].InitAsDescriptorTable(1, &descriptorRanges[1]);
@@ -496,8 +884,7 @@ namespace D3D12
 		ID3D12PipelineState* pipelineState = nullptr;
 
 		const D3D12_RESOURCE_DESC desc = texture.texture->GetDesc();
-		if (desc.DepthOrArraySize == 1 && desc.Format == DXGI_FORMAT_R8G8B8A8_UNORM_SRGB)
-		{
+		if (desc.DepthOrArraySize == 1 && desc.Format == DXGI_FORMAT_R8G8B8A8_UNORM_SRGB) {
 			if (!m_mipmapGeneration.gammaTexturePipelineState) {
 				ComPtr<ID3DBlob> computeShader = compileShader("shaders/hlsl/downsample.hlsl", "downsample_gamma", "cs_5_0");
 				D3D12_COMPUTE_PIPELINE_STATE_DESC psoDesc = {};
@@ -509,8 +896,7 @@ namespace D3D12
 			}
 			pipelineState = m_mipmapGeneration.gammaTexturePipelineState.Get();
 		}
-		else if (desc.DepthOrArraySize > 1 && desc.Format != DXGI_FORMAT_R8G8B8A8_UNORM_SRGB)
-		{
+		else if (desc.DepthOrArraySize > 1 && desc.Format != DXGI_FORMAT_R8G8B8A8_UNORM_SRGB) {
 			if (!m_mipmapGeneration.arrayTexturePipelineState) {
 				ComPtr<ID3DBlob> computeShader = compileShader("shaders/hlsl/downsample_array.hlsl", "downsample_linear", "cs_5_0");
 				D3D12_COMPUTE_PIPELINE_STATE_DESC psoDesc = {};
@@ -522,8 +908,7 @@ namespace D3D12
 			}
 			pipelineState = m_mipmapGeneration.arrayTexturePipelineState.Get();
 		}
-		else
-		{
+		else {
 			assert(desc.DepthOrArraySize == 1);
 			if (!m_mipmapGeneration.linearTexturePipelineState) {
 				ComPtr<ID3DBlob> computeShader = compileShader("shaders/hlsl/downsample.hlsl", "downsample_linear", "cs_5_0");
@@ -540,17 +925,17 @@ namespace D3D12
 		DescriptorHeapMark mark(m_descHeapCBV_SRV_UAV);
 
 		Texture linearTexture = texture;
-		if (desc.Format == DXGI_FORMAT_R8G8B8A8_UNORM_SRGB)
-		{
+		if (desc.Format == DXGI_FORMAT_R8G8B8A8_UNORM_SRGB) {
 			pipelineState = m_mipmapGeneration.gammaTexturePipelineState.Get();
 			linearTexture = createTexture(texture.width, texture.height, 1, DXGI_FORMAT_R8G8B8A8_UNORM, texture.levels);
+
 			m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(linearTexture.texture.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST));
 			m_commandList->CopyResource(linearTexture.texture.Get(), texture.texture.Get());
 			m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(linearTexture.texture.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_COMMON));
 		}
 
 		ID3D12DescriptorHeap* descriptorHeaps[] = {
-		m_descHeapCBV_SRV_UAV.heap.Get()
+			m_descHeapCBV_SRV_UAV.heap.Get()
 		};
 
 		m_commandList->SetComputeRootSignature(m_mipmapGeneration.rootSignature.Get());
@@ -601,8 +986,7 @@ namespace D3D12
 		srvDesc.Format = desc.Format;
 		srvDesc.ViewDimension = dimension;
 		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-		switch (dimension)
-		{
+		switch (dimension) {
 		case D3D12_SRV_DIMENSION_TEXTURE2D:
 			srvDesc.Texture2D.MostDetailedMip = mostDetailedMip;
 			srvDesc.Texture2D.MipLevels = effectiveMipLevels;
@@ -622,6 +1006,223 @@ namespace D3D12
 			assert(0);
 		}
 		m_device->CreateShaderResourceView(texture.texture.Get(), &srvDesc, texture.srv.cpuHandle);
+	}
+
+	void Renderer::createTextureUAV(Texture& texture, UINT mipSlice)
+	{
+		const D3D12_RESOURCE_DESC desc = texture.texture->GetDesc();
+		assert(desc.Flags & D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+
+		texture.uav = m_descHeapCBV_SRV_UAV.alloc();
+
+		D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+		uavDesc.Format = desc.Format;
+		if (desc.DepthOrArraySize > 1) {
+			uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
+			uavDesc.Texture2DArray.MipSlice = mipSlice;
+			uavDesc.Texture2DArray.FirstArraySlice = 0;
+			uavDesc.Texture2DArray.ArraySize = desc.DepthOrArraySize;
+		}
+		else {
+			uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+			uavDesc.Texture2D.MipSlice = mipSlice;
+		}
+		m_device->CreateUnorderedAccessView(texture.texture.Get(), nullptr, &uavDesc, texture.uav.cpuHandle);
+	}
+
+	FrameBuffer Renderer::createFrameBuffer(UINT width, UINT height, UINT samples, DXGI_FORMAT colorFormat, DXGI_FORMAT depthstencilFormat)
+	{
+		FrameBuffer fb = {};
+		fb.width = width;
+		fb.height = height;
+		fb.samples = samples;
+
+		D3D12_RESOURCE_DESC desc = {};
+		desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+		desc.Width = width;
+		desc.Height = height;
+		desc.DepthOrArraySize = 1;
+		desc.MipLevels = 1;
+		desc.SampleDesc.Count = samples;
+
+		if (colorFormat != DXGI_FORMAT_UNKNOWN) {
+			desc.Format = colorFormat;
+			desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+
+			const float optimizedClearColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+			if (FAILED(m_device->CreateCommittedResource(
+				&CD3DX12_HEAP_PROPERTIES{ D3D12_HEAP_TYPE_DEFAULT },
+				D3D12_HEAP_FLAG_NONE,
+				&desc,
+				D3D12_RESOURCE_STATE_RENDER_TARGET,
+				&CD3DX12_CLEAR_VALUE{ colorFormat, optimizedClearColor },
+				IID_PPV_ARGS(&fb.colorTexture))))
+			{
+				throw std::runtime_error("Failed to create FrameBuffer color texture");
+			}
+
+			D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
+			rtvDesc.Format = desc.Format;
+			rtvDesc.ViewDimension = (samples > 1) ? D3D12_RTV_DIMENSION_TEXTURE2DMS : D3D12_RTV_DIMENSION_TEXTURE2D;
+
+			fb.rtv = m_descHeapRTV.alloc();
+			m_device->CreateRenderTargetView(fb.colorTexture.Get(), &rtvDesc, fb.rtv.cpuHandle);
+
+			if (samples <= 1) {
+				D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+				srvDesc.Format = desc.Format;
+				srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+				srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+				srvDesc.Texture2D.MostDetailedMip = 0;
+				srvDesc.Texture2D.MipLevels = 1;
+
+				fb.srv = m_descHeapCBV_SRV_UAV.alloc();
+				m_device->CreateShaderResourceView(fb.colorTexture.Get(), &srvDesc, fb.srv.cpuHandle);
+			}
+		}
+
+		if (depthstencilFormat != DXGI_FORMAT_UNKNOWN) {
+			desc.Format = depthstencilFormat;
+			desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL | D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE;
+
+			if (FAILED(m_device->CreateCommittedResource(
+				&CD3DX12_HEAP_PROPERTIES{ D3D12_HEAP_TYPE_DEFAULT },
+				D3D12_HEAP_FLAG_NONE,
+				&desc,
+				D3D12_RESOURCE_STATE_DEPTH_WRITE,
+				&CD3DX12_CLEAR_VALUE{ depthstencilFormat, 1.0f, 0 },
+				IID_PPV_ARGS(&fb.depthStencilTexture))))
+			{
+				throw std::runtime_error("Failed to create FrameBuffer depth-stencil texture");
+			}
+
+			D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+			dsvDesc.Format = desc.Format;
+			dsvDesc.ViewDimension = (samples > 1) ? D3D12_DSV_DIMENSION_TEXTURE2DMS : D3D12_DSV_DIMENSION_TEXTURE2D;
+
+			fb.dsv = m_descHeapDSV.alloc();
+			m_device->CreateDepthStencilView(fb.depthStencilTexture.Get(), &dsvDesc, fb.dsv.cpuHandle);
+		}
+		return fb;
+	}
+
+	void Renderer::resolveFrameBuffer(const FrameBuffer& srcfb, const FrameBuffer& dstfb, DXGI_FORMAT format) const
+	{
+		const CD3DX12_RESOURCE_BARRIER preResolveBarriers[] = {
+			CD3DX12_RESOURCE_BARRIER::Transition(srcfb.colorTexture.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_RESOLVE_SOURCE),
+			CD3DX12_RESOURCE_BARRIER::Transition(dstfb.colorTexture.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RESOLVE_DEST)
+		};
+		const CD3DX12_RESOURCE_BARRIER postResolveBarriers[] = {
+			CD3DX12_RESOURCE_BARRIER::Transition(srcfb.colorTexture.Get(), D3D12_RESOURCE_STATE_RESOLVE_SOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET),
+			CD3DX12_RESOURCE_BARRIER::Transition(dstfb.colorTexture.Get(), D3D12_RESOURCE_STATE_RESOLVE_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
+		};
+
+		if (srcfb.colorTexture != dstfb.colorTexture) {
+			m_commandList->ResourceBarrier(2, preResolveBarriers);
+			m_commandList->ResolveSubresource(dstfb.colorTexture.Get(), 0, srcfb.colorTexture.Get(), 0, format);
+			m_commandList->ResourceBarrier(2, postResolveBarriers);
+		}
+	}
+
+	ComPtr<ID3D12RootSignature> Renderer::createRootSignature(D3D12_VERSIONED_ROOT_SIGNATURE_DESC& desc) const
+	{
+		const D3D12_ROOT_SIGNATURE_FLAGS standardFlags =
+			D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
+			D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS |
+			D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS;
+
+		switch (desc.Version) {
+		case D3D_ROOT_SIGNATURE_VERSION_1_0:
+			desc.Desc_1_0.Flags |= standardFlags;
+			break;
+		case D3D_ROOT_SIGNATURE_VERSION_1_1:
+			desc.Desc_1_1.Flags |= standardFlags;
+			break;
+		}
+
+		ComPtr<ID3D12RootSignature> rootSignature;
+		ComPtr<ID3DBlob> signatureBlob, errorBlob;
+		if (FAILED(D3DX12SerializeVersionedRootSignature(&desc, m_rootSignatureVersion, &signatureBlob, &errorBlob))) {
+			throw std::runtime_error("Failed to serialize root signature");
+		}
+		if (FAILED(m_device->CreateRootSignature(0, signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature)))) {
+			throw std::runtime_error("Failed to create root signature");
+		}
+		return rootSignature;
+	}
+
+	ConstantBufferView Renderer::createConstantBufferView(const void* data, UINT size)
+	{
+		ConstantBufferView view;
+		view.data = allocFromUploadBuffer(m_constantBuffer, size, 256);
+		view.cbv = m_descHeapCBV_SRV_UAV.alloc();
+		if (data) {
+			std::memcpy(view.data.cpuAddress, data, size);
+		}
+
+		D3D12_CONSTANT_BUFFER_VIEW_DESC desc = {};
+		desc.BufferLocation = view.data.gpuAddress;
+		desc.SizeInBytes = view.data.size;
+		m_device->CreateConstantBufferView(&desc, view.cbv.cpuHandle);
+
+		return view;
+	}
+
+	void Renderer::executeCommandList(bool reset) const
+	{
+		if (FAILED(m_commandList->Close())) {
+			throw std::runtime_error("Failed close command list (validation error or not in recording state)");
+		}
+
+		ID3D12CommandList* lists[] = { m_commandList.Get() };
+		m_commandQueue->ExecuteCommandLists(1, lists);
+
+		if (reset) {
+			m_commandList->Reset(m_commandAllocators[m_frameIndex].Get(), nullptr);
+		}
+	}
+
+	void Renderer::waitForGPU() const
+	{
+		UINT64& fenceValue = m_fenceValues[m_frameIndex];
+		++fenceValue;
+
+		m_commandQueue->Signal(m_fence.Get(), fenceValue);
+		m_fence->SetEventOnCompletion(fenceValue, m_fenceCompletionEvent);
+		WaitForSingleObject(m_fenceCompletionEvent, INFINITE);
+	}
+
+	void Renderer::presentFrame()
+	{
+		m_swapChain->Present(1, 0);
+
+		const UINT64 prevFrameFenceValue = m_fenceValues[m_frameIndex];
+		m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
+		UINT64& currentFrameFenceValue = m_fenceValues[m_frameIndex];
+
+		m_commandQueue->Signal(m_fence.Get(), prevFrameFenceValue);
+
+		if (m_fence->GetCompletedValue() < currentFrameFenceValue) {
+			m_fence->SetEventOnCompletion(currentFrameFenceValue, m_fenceCompletionEvent);
+			WaitForSingleObject(m_fenceCompletionEvent, INFINITE);
+		}
+		currentFrameFenceValue = prevFrameFenceValue + 1;
+	}
+
+	ComPtr<IDXGIAdapter1> Renderer::getAdapter(const ComPtr<IDXGIFactory4>& factory)
+	{
+		ComPtr<IDXGIAdapter1> adapter;
+		for (UINT index = 0; factory->EnumAdapters1(index, &adapter) != DXGI_ERROR_NOT_FOUND; ++index) {
+			DXGI_ADAPTER_DESC1 desc;
+			adapter->GetDesc1(&desc);
+			if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE) {
+				continue;
+			}
+			if (SUCCEEDED(D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, _uuidof(ID3D12Device), nullptr))) {
+				return adapter;
+			}
+		}
+		return nullptr;
 	}
 
 	ComPtr<ID3DBlob> Renderer::compileShader(const std::string& filename, const std::string& entryPoint, const std::string& profile)
@@ -646,4 +1247,5 @@ namespace D3D12
 		}
 		return shader;
 	}
-} // end namespace
+
+} // D3D12

@@ -7,7 +7,7 @@ namespace D3D12
 {
 	using Microsoft::WRL::ComPtr;
 
-	class Renderer
+	class Renderer 
 	{
 	public:
 		GLFWwindow* initialize(int width, int height, int maxSamples) ;
@@ -57,6 +57,8 @@ namespace D3D12
 		DescriptorHeap m_descHeapRTV;
 		DescriptorHeap m_descHeapDSV;
 		DescriptorHeap m_descHeapCBV_SRV_UAV;
+
+		UploadBuffer m_constantBuffer;
 
 		static const UINT NumFrames = 2;
 		ComPtr<ID3D12CommandAllocator> m_commandAllocators[NumFrames];
