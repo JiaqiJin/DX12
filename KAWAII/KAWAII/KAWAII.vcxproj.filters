@@ -47,5 +47,8 @@
     <ClInclude Include="Core\KAWAIICommand_DX12.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Core\KAWAIICommandConfig.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -159,6 +159,62 @@ namespace KAWAII
 	//--------------------------------------------------------------------------------------
 	class DLL_INTERFACE ConstantBuffer
 	{
+	public:
+		//ConstantBuffer();
+		virtual ~ConstantBuffer() {};
+		
+		// Creating the Constant Buffer View
+		virtual bool Create(const Device& device, size_t byteWidth, uint32_t numCBVs = 1,
+			const size_t* offsets = nullptr, MemoryType memoryType = MemoryType::UPLOAD,
+			const wchar_t* name = nullptr) = 0;
 
+		virtual bool Upload(CommandList* pCommandList, Resource& uploader, const void* pData,
+			size_t size, uint32_t cbvIndex = 0, ResourceState srcState = ResourceState::COMMON,
+			ResourceState dstState = ResourceState::COMMON) = 0;
+
+		virtual const Resource& GetResource() const = 0;
+		virtual const Descriptor& GetCBV(uint32_t index = 0) const = 0;
+
+		// Mapping the Constant Buffer
+		virtual void* Map(uint32_t cbvIndex = 0) = 0;
+		// Clear the Constant Buffer Data
+		virtual void Unmap() = 0;
+
+
+		using uptr = std::unique_ptr<ConstantBuffer>;
+		using sptr = std::shared_ptr<ConstantBuffer>;
 	};
+
+	//--------------------------------------------------------------------------------------
+	// Resource base 
+	// https://docs.microsoft.com/en-us/windows/win32/direct3d12/using-resource-barriers-to-synchronize-resource-states-in-direct3d-12
+	//--------------------------------------------------------------------------------------
+	class DLL_INTERFACE ResourceBase
+	{
+	public:
+		//ResourceBase();
+		virtual ~ResourceBase() {};
+		
+		virtual uint32_t SetBarrier(ResourceBarrier* barrier, ResourceState dstState,
+			uint32_t numBarriers = 0, uint32_t subResource = BARRIER_ALL_SUBRESOURCES,
+			BarrierFlag flags = BarrierFlag::NONE) = 0;
+		
+		virtual const Resource& GetResource() const = 0;
+		virtual const Descriptor& GetSRV(uint32_t index = 0) const = 0;
+
+		virtual ResourceBarrier	Transition(ResourceState dstState, uint32_t subresource = BARRIER_ALL_SUBRESOURCES,
+			BarrierFlag flag = BarrierFlag::NONE) = 0;
+		virtual ResourceState GetResourceState(uint32_t subresource = 0) const = 0;
+
+		virtual Format GetFormat() const = 0;
+
+		using uptr = std::unique_ptr<ResourceBase>;
+		using sptr = std::shared_ptr<ResourceBase>;
+	};
+
+	//--------------------------------------------------------------------------------------
+	// Vertex buffer
+	//--------------------------------------------------------------------------------------
+
+
 }

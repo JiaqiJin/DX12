@@ -135,6 +135,49 @@ namespace KAWAII
 		FORCE_UINT
 	};
 
+	// https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ne-d3d12-d3d12_resource_states
+	enum class ResourceState : uint8_t
+	{
+		COMMON = 0,
+		VERTEX_AND_CONSTANT_BUFFER = (1 << 0),
+		INDEX_BUFFER = (1 << 1),
+		RENDER_TARGET = (1 << 2),
+		UNORDERED_ACCESS = (1 << 3),
+		DEPTH_WRITE = (1 << 4),
+		DEPTH_READ = (1 << 5),
+		NON_PIXEL_SHADER_RESOURCE = (1 << 6),
+		PIXEL_SHADER_RESOURCE = (1 << 7),
+		STREAM_OUT = (1 << 8),
+		INDIRECT_ARGUMENT = (1 << 9),
+		COPY_DEST = (1 << 10),
+		COPY_SOURCE = (1 << 11),
+		RESOLVE_DEST = (1 << 12),
+		RESOLVE_SOURCE = (1 << 13),
+		PREDICATION = (1 << 14),
+		RAYTRACING_ACCELERATION_STRUCTURE = (1 << 15),
+		SHADING_RATE_SOURCE = (1 << 16),
+		GENERAL_READ = (VERTEX_AND_CONSTANT_BUFFER | INDEX_BUFFER | NON_PIXEL_SHADER_RESOURCE | PIXEL_SHADER_RESOURCE | INDIRECT_ARGUMENT | COPY_SOURCE | PREDICATION),
+		PRESENT = 0,
+
+		VIDEO_DECODE_READ = (1 << 17),
+		VIDEO_DECODE_WRITE = (1 << 18),
+		VIDEO_PROCESS_READ = (1 << 19),
+		VIDEO_PROCESS_WRITE = (1 << 20),
+		VIDEO_ENCODE_READ = (1 << 21),
+		VIDEO_ENCODE_WRITE = (1 << 22)
+	};
+
+	DEFINE_ENUM_FLAG_OPERATORS(ResourceState);
+
+	enum class BarrierFlag : uint8_t
+	{
+		NONE = 0,
+		BEGIN_ONLY = (1 << 0),
+		END_ONLY = (1 << 1)
+	};
+
+	DEFINE_ENUM_FLAG_OPERATORS(BarrierFlag);
+
 	enum class CommandListType : uint8_t
 	{
 		DIRECT,
@@ -221,6 +264,8 @@ namespace KAWAII
 		DEPTH = (1 << 0),
 		STENCIL = (1 << 1)
 	};
+
+	DEFINE_ENUM_FLAG_OPERATORS(ClearFlag);
 
 	// Structure defines the coordinates of the upper-left and lower-right corners of a rectangle.
 	struct RectRange

@@ -3,6 +3,8 @@
 
 #define H_RETURN(x, o, m, r)	{ const auto hr = x; if (FAILED(hr)) { o << m << std::endl; return r; } }
 
+#define BARRIER_ALL_SUBRESOURCES	D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES
+
 namespace KAWAII
 {
 #if _HAS_CXX17

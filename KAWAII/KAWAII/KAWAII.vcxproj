@@ -166,6 +166,7 @@
   <ItemGroup>
     <ClInclude Include="Common\d3dx12.h" />
     <ClInclude Include="Core\KAWAII.h" />
+    <ClInclude Include="Core\KAWAIICommandConfig.h" />
     <ClInclude Include="Core\KAWAIICommand_DX12.h" />
     <ClInclude Include="Core\KAWAIIEnum_DX12.h" />
     <ClInclude Include="Core\KAWAII_DX12.h" />
