@@ -267,6 +267,22 @@ namespace KAWAII
 
 	DEFINE_ENUM_FLAG_OPERATORS(ClearFlag);
 
+	enum class ResourceFlag : uint32_t
+	{
+		NONE = 0,
+		ALLOW_RENDER_TARGET = (1 << 0),
+		ALLOW_DEPTH_STENCIL = (1 << 1),
+		ALLOW_UNORDERED_ACCESS = (1 << 2),
+		DENY_SHADER_RESOURCE = (1 << 3),
+		ALLOW_CROSS_ADAPTER = (1 << 4),
+		ALLOW_SIMULTANEOUS_ACCESS = (1 << 5),
+		VIDEO_DECODE_REFERENCE_ONLY = (1 << 6),
+		NEED_PACKED_UAV = ALLOW_UNORDERED_ACCESS | 0x8000,
+		ACCELERATION_STRUCTURE = ALLOW_UNORDERED_ACCESS | 0x400000
+	};
+
+	DEFINE_ENUM_FLAG_OPERATORS(ResourceFlag);
+
 	// Structure defines the coordinates of the upper-left and lower-right corners of a rectangle.
 	struct RectRange
 	{
@@ -385,6 +401,13 @@ namespace KAWAII
 		float Height;
 		float MinDepth;
 		float MaxDepth;
+	};
+	//https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_subresource_data
+	struct SubresourceData
+	{
+		const void* pData;
+		intptr_t RowPitch;
+		intptr_t SlicePitch;
 	};
 
 	//Descriptor Related

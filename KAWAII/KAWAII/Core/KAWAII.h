@@ -185,36 +185,5 @@ namespace KAWAII
 		using sptr = std::shared_ptr<ConstantBuffer>;
 	};
 
-	//--------------------------------------------------------------------------------------
-	// Resource base 
-	// https://docs.microsoft.com/en-us/windows/win32/direct3d12/using-resource-barriers-to-synchronize-resource-states-in-direct3d-12
-	//--------------------------------------------------------------------------------------
-	class DLL_INTERFACE ResourceBase
-	{
-	public:
-		//ResourceBase();
-		virtual ~ResourceBase() {};
-		
-		virtual uint32_t SetBarrier(ResourceBarrier* barrier, ResourceState dstState,
-			uint32_t numBarriers = 0, uint32_t subResource = BARRIER_ALL_SUBRESOURCES,
-			BarrierFlag flags = BarrierFlag::NONE) = 0;
-		
-		virtual const Resource& GetResource() const = 0;
-		virtual const Descriptor& GetSRV(uint32_t index = 0) const = 0;
-
-		virtual ResourceBarrier	Transition(ResourceState dstState, uint32_t subresource = BARRIER_ALL_SUBRESOURCES,
-			BarrierFlag flag = BarrierFlag::NONE) = 0;
-		virtual ResourceState GetResourceState(uint32_t subresource = 0) const = 0;
-
-		virtual Format GetFormat() const = 0;
-
-		using uptr = std::unique_ptr<ResourceBase>;
-		using sptr = std::shared_ptr<ResourceBase>;
-	};
-
-	//--------------------------------------------------------------------------------------
-	// Vertex buffer
-	//--------------------------------------------------------------------------------------
-
-
+	
 }
