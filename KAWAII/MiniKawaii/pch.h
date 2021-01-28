@@ -1,47 +1,98 @@
 //
-// Copyright (c) Microsoft. All rights reserved.
-// This code is licensed under the MIT License (MIT).
-// THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
-// ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
-// IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR
-// PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
-//
-// Developed by Minigraph
-//
-// Author:  James Stanard 
+// pch.h
+// Header for standard system include files.
 //
 
 #pragma once
 
-#pragma warning(disable:4201) // nonstandard extension used : nameless struct/union
-#pragma warning(disable:4238) // nonstandard extension used : class rvalue used as lvalue
-#pragma warning(disable:4324) // structure was padded due to __declspec(align())
+#include <winsdkver.h>
+#define _WIN32_WINNT 0x0A00
+#include <sdkddkver.h>
 
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
-#ifndef NOMINMAX
+// Use the C++ standard templated min/max
 #define NOMINMAX
-#endif
-#include <windows.h>
+
+// DirectX apps don't need GDI
+#define NODRAWTEXT
+#define NOGDI
+#define NOBITMAP
+
+// Include <mcx.h> if you need this
+#define NOMCX
+
+// Include <winsvc.h> if you need this
+#define NOSERVICE
+
+// WinHelp is deprecated
+#define NOHELP
+
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+
+#include <wrl/client.h>
+#include <wrl/event.h>
 
 #include <d3d12.h>
 
-#pragma comment(lib, "d3d12.lib")
-#pragma comment(lib, "dxgi.lib")
+#if defined(NTDDI_WIN10_RS2)
+#include <dxgi1_6.h>
+#else
+#include <dxgi1_5.h>
+#endif
 
-#define MY_IID_PPV_ARGS IID_PPV_ARGS
-#define D3D12_GPU_VIRTUAL_ADDRESS_NULL      ((D3D12_GPU_VIRTUAL_ADDRESS)0)
-#define D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN   ((D3D12_GPU_VIRTUAL_ADDRESS)-1)
+#include <DirectXMath.h>
+#include <DirectXColors.h>
+#include <DirectXPackedVector.h>
 
+// DX12 - MiniEngine
+#define D3D12_GPU_VIRTUAL_ADDRESS_NULL		((D3D12_GPU_VIRTUAL_ADDRESS)0)
+#define D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN	((D3D12_GPU_VIRTUAL_ADDRESS)-1)
 
-#include <cstdint>
-#include <cstdio>
-#include <cstdarg>
+#include "Common/d3dx12.h"
+
 #include <vector>
-#include <memory>
-#include <string>
+#include <algorithm>
 #include <exception>
+#include <memory>
+#include <stdexcept>
+#include <cassert>
+#include <stdio.h>
 
-#include <wrl.h>
-#include <ppltasks.h>
+// To use graphics and CPU markup events with the latest version of PIX, change this to include <pix3.h>
+// then add the NuGet package WinPixEventRuntime to the project.
+#include <pix.h>
+
+#ifdef _DEBUG
+#include <dxgidebug.h>
+#endif
+
+namespace MyDirectX
+{
+	// Helper class for COM exceptions
+	class com_exception : public std::exception
+	{
+	public:
+		com_exception(HRESULT hr) : result(hr) {}
+
+		virtual const char* what() const override
+		{
+			static char s_str[64] = {};
+			sprintf_s(s_str, "Failure with HRESULT of %08X", static_cast<unsigned int>(result));
+			return s_str;
+		}
+
+	private:
+		HRESULT result;
+	};
+
+	// Helper utility converts D3D API failures into exceptions.
+	inline void ThrowIfFailed(HRESULT hr)
+	{
+		if (FAILED(hr))
+		{
+			throw com_exception(hr);
+		}
+	}
+
+	const unsigned SCR_WIDTH = 640, SCR_HEIGHT = 480;
+}
