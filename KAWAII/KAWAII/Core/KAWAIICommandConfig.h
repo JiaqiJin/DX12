@@ -189,6 +189,24 @@ namespace KAWAII
 		VIDEO_ENCODE
 	};
 
+	enum class CommandQueueFlag : uint8_t
+	{
+		NONE = 0,
+		DISABLE_GPU_TIMEOUT = (1 << 0)
+	};
+
+	DEFINE_ENUM_FLAG_OPERATORS(CommandQueueFlag);
+
+	enum class FenceFlag : uint8_t
+	{
+		NONE = 0,
+		SHARED = (1 << 0),
+		SHARED_CROSS_ADAPTER = (1 << 1),
+		NON_MONITORED = (1 << 2)
+	};
+
+	DEFINE_ENUM_FLAG_OPERATORS(FenceFlag);
+
 	enum class InputClassification : uint8_t
 	{
 		PER_VERTEX_DATA,
@@ -408,6 +426,19 @@ namespace KAWAII
 		const void* pData;
 		intptr_t RowPitch;
 		intptr_t SlicePitch;
+	};
+	//https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_range
+	struct Range
+	{
+		Range() = default;
+		Range(uintptr_t begin, uintptr_t end)
+		{
+			Begin = begin;
+			End = end;
+		}
+
+		uintptr_t Begin;
+		uintptr_t End;
 	};
 
 	//Descriptor Related

@@ -80,4 +80,56 @@ namespace KAWAII
 		using sptr = std::shared_ptr<Texture2D>;
 	};
 
+	//--------------------------------------------------------------------------------------
+	// 3D Texture
+	//--------------------------------------------------------------------------------------
+	class DLL_INTERFACE Texture3D :
+		public virtual Texture2D
+	{
+	public:
+		//Texture3D();
+		virtual ~Texture3D() {};
+
+		virtual bool Create(const Device& device, uint32_t width, uint32_t height, uint32_t depth,
+			Format format, ResourceFlag resourceFlags = ResourceFlag::NONE, uint8_t numMips = 1,
+			MemoryType memoryType = MemoryType::DEFAULT, const wchar_t* name = nullptr) = 0;
+		virtual bool CreateSRVs(Format format = Format::UNKNOWN, uint8_t numMips = 1) = 0;
+		virtual bool CreateSRVLevels(uint8_t numMips, Format format = Format::UNKNOWN) = 0;
+		virtual bool CreateUAVs(Format format = Format::UNKNOWN, uint8_t numMips = 1,
+			std::vector<Descriptor>* pUavs = nullptr) = 0;
+
+		virtual uint32_t GetDepth() const = 0;
+
+		using uptr = std::unique_ptr<Texture3D>;
+		using sptr = std::shared_ptr<Texture3D>;
+	};
+
+	//--------------------------------------------------------------------------------------
+	// Raw buffer
+	//--------------------------------------------------------------------------------------
+	class DLL_INTERFACE RawBuffer :
+		public virtual ResourceBase
+	{
+	public:
+		//RawBuffer();
+		virtual ~RawBuffer() {};
+
+		virtual bool Create(const Device& device, size_t byteWidth, ResourceFlag resourceFlags = ResourceFlag::NONE,
+			MemoryType memoryType = MemoryType::DEFAULT, uint32_t numSRVs = 1) = 0; //TO-DO
+
+		virtual bool Upload(CommandList* pCommandList, Resource& uploader, const void* pData, size_t size,
+			uint32_t descriptorIndex = 0, ResourceState dstState = ResourceState::COMMON) = 0;
+		virtual bool CreateSRVs() = 0;
+		virtual bool CreateUAVs() = 0;
+
+		virtual const Descriptor& GetUAV(uint32_t index = 0) const = 0;
+
+		virtual void* Map(uint32_t descriptorIndex = 0, uintptr_t readBegin = 0, uintptr_t readEnd = 0) = 0;
+		virtual void* Map(const Range* pReadRange, uint32_t descriptorIndex = 0) = 0;
+		virtual void Unmap() = 0;
+
+		using uptr = std::unique_ptr<RawBuffer>;
+		using sptr = std::shared_ptr<RawBuffer>;
+	};
+
 }

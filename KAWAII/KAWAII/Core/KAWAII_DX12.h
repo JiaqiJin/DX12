@@ -61,6 +61,7 @@ namespace KAWAII
 	{
 
 	};
+	using CommandQueue = com_ptr<DX12CommandQueue>;
 
 	// Resources related
 	using Resource = com_ptr<ID3D12Resource>;
@@ -90,9 +91,16 @@ namespace KAWAII
 
 	//Devices
 	MIDL_INTERFACE("189819f1-1db6-4b57-be54-1821339b85f7")
-	DLL_INTERFACE DX12Device : public ID3D12Device
+		DLL_INTERFACE DX12Device : public ID3D12Device
 	{
-
+		bool GetCommandQueue(CommandQueue& commandQueue, CommandListType type, CommandQueueFlag flags, int32_t priority = 0, uint32_t nodeMask = 0);
+		bool GetCommandAllocator(CommandAllocator& commandAllocator, CommandListType type);
+		bool GetCommandList(CommandList* pCommandList, uint32_t nodeMask, CommandListType type,
+			const CommandAllocator& commandAllocator, const Pipeline& pipeline);
+		bool GetCommandList(CommandList& commandList, uint32_t nodeMask, CommandListType type,
+			const CommandAllocator& commandAllocator, const Pipeline& pipeline);
+		bool GetFence(Fence& fence, uint64_t initialValue, FenceFlag flags);
+		bool CreateCommandLayout();
 	};
 	using Device = com_ptr<DX12Device>;
 

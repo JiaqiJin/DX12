@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "MyApp.h"
 
@@ -11,16 +11,18 @@ namespace MyDirectX
 
 		virtual void Update() override;
 
-		virtual void Render() override; 
+		virtual void Render() override;
 
 	protected:
 		virtual void InitAssets() override;
 
+		// 其实放到helper类里更好
 		std::vector<UINT8> GenerateTextureData(bool bRandColor = false);
 
 		virtual void DisposeUploaders();
 
 	private:
+		// 这些方法 可供子类直接使用
 		virtual void InitRootSignatures();
 
 		virtual void InitShadersAndInputElements();
@@ -35,10 +37,11 @@ namespace MyDirectX
 
 		virtual void InitTextures();
 
+		// 自定义初始化（其它效果可能需要初始化，留个接口）
 		virtual void CustomInit();
 
 	protected:
-		
+		// 没有实际意义，只是声明一下，方便写些测试函数
 		void Test();
 
 		// pipeline objects
@@ -90,4 +93,3 @@ namespace MyDirectX
 		std::vector<D3D12_INPUT_ELEMENT_DESC> m_InputElements;
 	};
 }
-
