@@ -25,6 +25,37 @@ namespace KAWAII
 		REQ_TEXTURE2D_ARRAY_AXIS_DIMENSION
 	};
 
+	// https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_indirect_argument_desc
+	struct IndirectArgument
+	{
+		IndirectArgumentType Type;
+		union
+		{
+			struct
+			{
+				uint32_t Slot;
+			} VertexBuffer;
+			struct
+			{
+				uint32_t Index;
+				uint32_t DestOffsetIn32BitValues;
+				uint32_t Num32BitValuesToSet;
+			} Constant;
+			struct
+			{
+				uint32_t Index;
+			} ConstantBufferView;
+			struct
+			{
+				uint32_t Index;
+			} ShaderResourceView;
+			struct
+			{
+				uint32_t Index;
+			} UnorderedAccessView;
+		};
+	};
+
 	class CommandList;
 }
 
@@ -114,6 +145,7 @@ namespace KAWAII
 			const Descriptor* pRenderTargetViews,
 			const Descriptor* pDepthStencilView = nullptr,
 			bool rtsSingleHandleToDescriptorRange = false) const = 0;
+		// https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-omsetrendertargets
 		virtual void OMSetFramebuffer(const Framebuffer& framebuffer) const = 0;
 		// Sets the reference value for depth stencil tests.
 		virtual void OMSetStencilRef(uint32_t stencilRef) const = 0;

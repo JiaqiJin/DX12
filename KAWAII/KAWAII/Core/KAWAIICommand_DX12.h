@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../stdafx.h"
 #include "KAWAII.h"
 
 namespace KAWAII
@@ -69,6 +70,7 @@ namespace KAWAII
 		void IASetIndexBuffer(const IndexBufferView& view) const;
 		void IASetVertexBuffers(uint32_t startSlot, uint32_t numViews, const VertexBufferView* pViews) const;
 		void SOSetTargets(uint32_t startSlot, uint32_t numViews, const StreamOutBufferView* pViews) const;
+		// https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-omsetrendertargets
 		void OMSetFramebuffer(const Framebuffer& framebuffer) const;
 		void OMSetRenderTargets(
 			uint32_t numRenderTargetDescriptors,

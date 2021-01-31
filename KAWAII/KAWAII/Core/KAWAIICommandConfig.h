@@ -221,6 +221,19 @@ namespace KAWAII
 		CUSTOM
 	};
 
+	enum class IndirectArgumentType : uint32_t
+	{
+		DRAW,
+		DRAW_INDEXED,
+		DISPATCH,
+		VERTEX_BUFFER_VIEW,
+		INDEX_BUFFER_VIEW,
+		CONSTANT,
+		CONSTANT_BUFFER_VIEW,
+		SHADER_RESOURCE_VIEW,
+		UNORDERED_ACCESS_VIEW
+	};
+
 	enum class PrimitiveTopologyType : uint8_t
 	{
 		UNDEFINED,
@@ -446,7 +459,9 @@ namespace KAWAII
 	using DescriptorTable = std::shared_ptr<uint64_t>;
 	struct Framebuffer
 	{
+		uint32_t NumRenderTargetDescriptors;
 		std::shared_ptr<Descriptor> RenderTargetViews;
+		Descriptor DepthStencilView;
 	};
 
 	/*...*/

@@ -1,7 +1,8 @@
 #pragma once
 #include "stdafx.h"
 
-#define H_RETURN(x, o, m, r)	{ const auto hr = x; if (FAILED(hr)) { o << m << std::endl; return r; } }
+#define H_RETURN(x, o, m, r)		{ const auto hr = x; if (FAILED(hr)) { o << m << std::endl; assert(!m); return r; } }
+#define V_RETURN(x, o, r)			H_RETURN(x, o, KAWAII::HrToString(hr).c_str(), r)
 
 #define BARRIER_ALL_SUBRESOURCES	D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES
 
@@ -57,9 +58,11 @@ namespace KAWAII
 	using Fence = com_ptr<ID3D12Fence>;
 	
 	MIDL_INTERFACE("0ec870a6-5d7e-4c22-8cfc-5baae07616ed")
-	DLL_INTERFACE DX12CommandQueue : public ID3D12CommandQueue
+		DLL_INTERFACE DX12CommandQueue : public ID3D12CommandQueue
 	{
-
+		void SubmitCommandLists(uint32_t numCommandLists, CommandList* const* ppCommandLists);
+		void SubmitCommandList(CommandList* const pCommandList);
+		//UINT NumCommandLists, ID3D12CommandList* const* ppCommandLists
 	};
 	using CommandQueue = com_ptr<DX12CommandQueue>;
 
@@ -100,7 +103,8 @@ namespace KAWAII
 		bool GetCommandList(CommandList& commandList, uint32_t nodeMask, CommandListType type,
 			const CommandAllocator& commandAllocator, const Pipeline& pipeline);
 		bool GetFence(Fence& fence, uint64_t initialValue, FenceFlag flags);
-		bool CreateCommandLayout();
+		bool CreateCommandLayout(CommandLayout& commandLayout, uint32_t byteStride, uint32_t numArguments,
+			const IndirectArgument* pArguments, uint32_t nodeMask);
 	};
 	using Device = com_ptr<DX12Device>;
 
@@ -111,5 +115,7 @@ namespace KAWAII
 		using Rasterizer = std::shared_ptr<D3D12_RASTERIZER_DESC>;
 		using DepthStencil = std::shared_ptr<D3D12_DEPTH_STENCIL_DESC>;
 	}
+
+	DLL_INTERFACE DXGI_FORMAT GetDXGIFormat(Format format);
 
 }
