@@ -3,6 +3,9 @@
 #include "stdafx.h"
 
 #pragma warning(disable:4250)
+#define VOID_RETURN
+#define C_RETURN(x, r)		if (x) return r
+#define N_RETURN(x, r)		C_RETURN(!(x), r)
 
 #define APPEND_ALIGNED_ELEMENT 0xffffffff
 
@@ -190,9 +193,6 @@ namespace KAWAII
 		com_ptr<ID3D12GraphicsCommandList> m_commandList;
 	};
 
-	//--------------------------------------------------------------------------------------
-	// Constant buffer
-	//--------------------------------------------------------------------------------------
 	//--------------------------------------------------------------------------------------
 	// Constant buffer
 	//--------------------------------------------------------------------------------------

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../stdafx.h"
 #include "KAWAII.h"
 
 namespace KAWAII
@@ -8,97 +9,118 @@ namespace KAWAII
 	// Resource base 
 	// https://docs.microsoft.com/en-us/windows/win32/direct3d12/using-resource-barriers-to-synchronize-resource-states-in-direct3d-12
 	//--------------------------------------------------------------------------------------
-	class DLL_INTERFACE ResourceBase
+	class ResourceBase
 	{
 	public:
-		//ResourceBase();
-		virtual ~ResourceBase() {};
+		ResourceBase();
+		~ResourceBase() {};
 		//(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_vertexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, 
 		//D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
-		virtual uint32_t SetBarrier(ResourceBarrier* barrier, ResourceState dstState,
+		uint32_t SetBarrier(ResourceBarrier* barrier, ResourceState dstState,
 			uint32_t numBarriers = 0, uint32_t subResource = BARRIER_ALL_SUBRESOURCES,
-			BarrierFlag flags = BarrierFlag::NONE) = 0;
+			BarrierFlag flags = BarrierFlag::NONE);
 
-		virtual const Resource& GetResource() const = 0;
-		virtual const Descriptor& GetSRV(uint32_t index = 0) const = 0;
+		const Resource& GetResource() const;
+		const Descriptor& GetSRV(uint32_t index = 0) const;
 
-		virtual ResourceBarrier	Transition(ResourceState dstState, uint32_t subresource = BARRIER_ALL_SUBRESOURCES,
-			BarrierFlag flag = BarrierFlag::NONE) = 0;
-		virtual ResourceState GetResourceState(uint32_t subresource = 0) const = 0;
+		ResourceBarrier	Transition(ResourceState dstState, uint32_t subresource = BARRIER_ALL_SUBRESOURCES,
+			BarrierFlag flag = BarrierFlag::NONE);
+		ResourceState GetResourceState(uint32_t subresource = 0) const;
 
-		virtual Format GetFormat() const = 0;
+		Format GetFormat() const;
+		uint32_t GetWidth() const;
 
 		using uptr = std::unique_ptr<ResourceBase>;
 		using sptr = std::shared_ptr<ResourceBase>;
+
+	protected:
+		void setDevice(const Device& device);
+		Descriptor allocateSrvUavPool();
+
+		Device m_device;
+		Resource m_resource;
+		Format m_format;
+		std::vector<DescriptorPool>	m_srvUavPools;
+		std::vector<Descriptor> m_srvs;
+		std::vector<ResourceState> m_states;
+		std::wstring m_name;
 	};
 
 	//--------------------------------------------------------------------------------------
 	// 2D Texture
 	//--------------------------------------------------------------------------------------
-	class DLL_INTERFACE Texture2D : public virtual ResourceBase
+	class Texture2D : public ResourceBase
 	{
 	public:
-		//Texture2D();
-		virtual ~Texture2D() {};
+		Texture2D();
+		~Texture2D() {};
 
-		virtual bool Create(const Device& device, uint32_t width, uint32_t height, Format format,
+		bool Create(const Device& device, uint32_t width, uint32_t height, Format format,
 			uint32_t arraySize = 1, ResourceFlag resourceFlags = ResourceFlag::NONE,
-			uint8_t numMips = 1, uint8_t sampleCount = 1, MemoryType memoryType = MemoryType::DEFAULT,
-			bool isCubeMap = false, const wchar_t* name = nullptr) = 0;
-		virtual bool Upload(CommandList* pCommandList, Resource& uploader,
+			uint8_t numMips = 1, uint8_t sampleCount = 1, const float* pClearColor = nullptr,
+			bool isCubeMap = false, const wchar_t* name = nullptr);
+		bool Upload(CommandList* pCommandList, Resource& uploader,
 			const SubresourceData* pSubresourceData, uint32_t numSubresources = 1,
-			ResourceState dstState = ResourceState::COMMON, uint32_t firstSubresource = 0) = 0;
-		virtual bool Upload(CommandList* pCommandList, Resource& uploader, const void* pData,
-			uint8_t stride = sizeof(float), ResourceState dstState = ResourceState::COMMON) = 0;
-		virtual bool CreateSRVs(uint32_t arraySize, Format format = Format::UNKNOWN, uint8_t numMips = 1,
-			uint8_t sampleCount = 1, bool isCubeMap = false) = 0;
-		virtual bool CreateSRVLevels(uint32_t arraySize, uint8_t numMips, Format format = Format::UNKNOWN,
-			uint8_t sampleCount = 1, bool isCubeMap = false) = 0;
-		virtual bool CreateUAVs(uint32_t arraySize, Format format = Format::UNKNOWN, uint8_t numMips = 1,
-			std::vector<Descriptor>* pUavs = nullptr) = 0;
+			ResourceState dstState = ResourceState::COMMON, uint32_t firstSubresource = 0);
+		bool Upload(CommandList* pCommandList, Resource& uploader, const void* pData,
+			uint8_t stride = sizeof(float), ResourceState dstState = ResourceState::COMMON);
+		bool CreateSRVs(uint32_t arraySize, Format format = Format::UNKNOWN, uint8_t numMips = 1,
+			uint8_t sampleCount = 1, bool isCubeMap = false);
+		bool CreateSRVLevels(uint32_t arraySize, uint8_t numMips, Format format = Format::UNKNOWN,
+			uint8_t sampleCount = 1, bool isCubeMap = false);
+		bool CreateUAVs(uint32_t arraySize, Format format = Format::UNKNOWN, uint8_t numMips = 1,
+			std::vector<Descriptor>* pUavs = nullptr);
 
-		virtual uint32_t SetBarrier(ResourceBarrier* pBarriers, ResourceState dstState,
+		uint32_t SetBarrier(ResourceBarrier* pBarriers, ResourceState dstState,
 			uint32_t numBarriers = 0, uint32_t subresource = BARRIER_ALL_SUBRESOURCES,
-			BarrierFlag flags = BarrierFlag::NONE) = 0;
+			BarrierFlag flags = BarrierFlag::NONE);
 		virtual uint32_t SetBarrier(ResourceBarrier* pBarriers, uint8_t mipLevel, ResourceState dstState,
-			uint32_t numBarriers = 0, uint32_t slice = 0, BarrierFlag flags = BarrierFlag::NONE) = 0;
+			uint32_t numBarriers = 0, uint32_t slice = 0, BarrierFlag flags = BarrierFlag::NONE);
 
-		virtual void Blit() = 0;
-		virtual void GenerateMips() = 0;
+		void Blit();
+		virtual void GenerateMips();
 
-		virtual const Descriptor& GetUAV(uint8_t index = 0) const = 0;
-		virtual const Descriptor& GetPackedUAV(uint8_t index = 0) const = 0;
-		virtual const Descriptor& GetSRVLevel(uint8_t level) const = 0;
+		const Descriptor& GetUAV(uint8_t index = 0) const;
+		const Descriptor& GetPackedUAV(uint8_t index = 0) const;
+		const Descriptor& GetSRVLevel(uint8_t level) const;
 
-		virtual uint32_t	GetHeight() const = 0;
-		virtual uint32_t	GetArraySize() const = 0;
-		virtual uint8_t		GetNumMips() const = 0;
+		uint32_t	GetHeight() const;
+		uint32_t	GetArraySize() const;
+		uint8_t		GetNumMips() const;
 
 		Texture2D* AsTexture2D();
 
 		using uptr = std::unique_ptr<Texture2D>;
 		using sptr = std::shared_ptr<Texture2D>;
+
+	protected:
+		bool create(const Device& device, uint32_t width, uint32_t height,
+			uint32_t arraySize, Format format, uint8_t numMips, uint8_t sampleCount,
+			ResourceFlag resourceFlags, const float* pClearColor, bool isCubeMap,
+			const wchar_t* name);
+		std::vector<Descriptor>	m_uavs;
+		std::vector<Descriptor>	m_packedUavs;
+		std::vector<Descriptor>	m_srvLevels;
 	};
 
 	//--------------------------------------------------------------------------------------
 	// 3D Texture
 	//--------------------------------------------------------------------------------------
-	class DLL_INTERFACE Texture3D :
-		public virtual Texture2D
+	class Texture3D : public Texture2D
 	{
 	public:
-		//Texture3D();
-		virtual ~Texture3D() {};
+		Texture3D();
+		~Texture3D() {};
 
-		virtual bool Create(const Device& device, uint32_t width, uint32_t height, uint32_t depth,
+		bool Create(const Device& device, uint32_t width, uint32_t height, uint32_t depth,
 			Format format, ResourceFlag resourceFlags = ResourceFlag::NONE, uint8_t numMips = 1,
-			MemoryType memoryType = MemoryType::DEFAULT, const wchar_t* name = nullptr) = 0;
-		virtual bool CreateSRVs(Format format = Format::UNKNOWN, uint8_t numMips = 1) = 0;
-		virtual bool CreateSRVLevels(uint8_t numMips, Format format = Format::UNKNOWN) = 0;
-		virtual bool CreateUAVs(Format format = Format::UNKNOWN, uint8_t numMips = 1,
-			std::vector<Descriptor>* pUavs = nullptr) = 0;
+			MemoryType memoryType = MemoryType::DEFAULT, const wchar_t* name = nullptr);
+		bool CreateSRVs(Format format = Format::UNKNOWN, uint8_t numMips = 1);
+		bool CreateSRVLevels(uint8_t numMips, Format format = Format::UNKNOWN);
+		bool CreateUAVs(Format format = Format::UNKNOWN, uint8_t numMips = 1,
+			std::vector<Descriptor>* pUavs = nullptr);
 
-		virtual uint32_t GetDepth() const = 0;
+		uint32_t GetDepth() const ;
 
 		using uptr = std::unique_ptr<Texture3D>;
 		using sptr = std::shared_ptr<Texture3D>;
@@ -107,8 +129,7 @@ namespace KAWAII
 	//--------------------------------------------------------------------------------------
 	// Raw buffer
 	//--------------------------------------------------------------------------------------
-	class DLL_INTERFACE RawBuffer :
-		public virtual ResourceBase
+	class RawBuffer : public ResourceBase
 	{
 	public:
 		//RawBuffer();
