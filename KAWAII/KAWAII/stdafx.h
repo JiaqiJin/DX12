@@ -12,7 +12,7 @@
 #include <D3Dcompiler.h>
 #include <DirectXMath.h>
 #include <DirectXPackedVector.h>
-#include "d3dx12.h"
+#include "Common/d3dx12.h"
 
 // C RunTime Header Files
 #include <iostream>

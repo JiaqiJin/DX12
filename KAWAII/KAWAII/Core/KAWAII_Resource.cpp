@@ -55,14 +55,14 @@ namespace KAWAII
 		m_states(){
 	}
 
-	ResourceBase::~ResourceBase()
-	{
-	}
-
 	uint32_t ResourceBase::SetBarrier(ResourceBarrier* pBarriers, ResourceState dstState,
 		uint32_t numBarriers, uint32_t subresource, BarrierFlag flags)
 	{
-		
+		const auto& state = m_states[subresource == BARRIER_ALL_SUBRESOURCES ? 0 : subresource];
+		if(state != dstState || dstState == ResourceState::UNORDERED_ACCESS)
+			pBarriers[numBarriers++] = Transition(dstState, subresource, flags);
+
+		return numBarriers;
 	}
 
 	const Resource& ResourceBase::GetResource() const
@@ -72,7 +72,8 @@ namespace KAWAII
 
 	const Descriptor& ResourceBase::GetSRV(uint32_t index) const
 	{
-		
+		assert(m_srvs.size() > index);
+		return m_srvs[index];
 	}
 
 	ResourceBarrier ResourceBase::Transition(ResourceState dstState,
@@ -144,18 +145,12 @@ namespace KAWAII
 	{
 	}
 
-	Texture2D::~Texture2D()
+	bool Texture2D::Create(const Device& device, uint32_t width, uint32_t height, Format format,
+		uint32_t arraySize, ResourceFlag resourceFlags, uint8_t numMips, uint8_t sampleCount,
+		MemoryType memoryType, bool isCubeMap, const wchar_t* name)
 	{
-	}
-
-	bool Texture2D::create(const Device& device, uint32_t width, uint32_t height,
-		uint32_t arraySize, Format format, uint8_t numMips, uint8_t sampleCount,
-		ResourceFlag resourceFlags, const float* pClearColor, bool isCubeMap,
-		const wchar_t* name)
-	{
-		M_RETURN(!device, cerr, "The device is NULL.", false);
+		M_RETURN(!device, std::cerr, "The device is NULL.", false);
 		setDevice(device);
-		m_rtvPools.clear();
 
 		if (name) m_name = name;
 
@@ -168,39 +163,109 @@ namespace KAWAII
 		const auto formatUAV = needPackedUAV ? MapToPackedFormat(format) : format;
 
 		// Setup the texture description.
-		const CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
+		const CD3DX12_HEAP_PROPERTIES heapProperties(GetDX12HeapType(memoryType));
 		const auto desc = CD3DX12_RESOURCE_DESC::Tex2D(GetDXGIFormat(format),
-			width, height, arraySize, numMips, sampleCount, 0,
-			GetDX12ResourceFlags(ResourceFlag::ALLOW_RENDER_TARGET | resourceFlags));
+			width, height, arraySize, numMips, sampleCount, 0, GetDX12ResourceFlags(resourceFlags));
 
 		// Determine initial state
 		m_states.resize(arraySize * numMips);
-		for (auto& state : m_states) state = ResourceState::COMMON;
+		switch (memoryType)
+		{
+		case MemoryType::UPLOAD:
+			for (auto& state : m_states)
+				state = ResourceState::GENERAL_READ;
+			break;
+		case MemoryType::READBACK:
+			for (auto& state : m_states)
+				state = ResourceState::COPY_DEST;
+			break;
+		default:
+			for (auto& state : m_states)
+				state = ResourceState::COMMON;
+		}
 
-		// Optimized clear value
-		D3D12_CLEAR_VALUE clearValue = { GetDXGIFormat(m_format) };
-		if (pClearColor) memcpy(clearValue.Color, pClearColor, sizeof(clearValue.Color));
-
-		// Create the render target texture.
 		V_RETURN(m_device->CreateCommittedResource(&heapProperties, D3D12_HEAP_FLAG_NONE, &desc,
-			GetDX12ResourceStates(m_states[0]), &clearValue, IID_PPV_ARGS(&m_resource)), std::clog, false);
+			GetDX12ResourceStates(m_states[0]), nullptr, IID_PPV_ARGS(&m_resource)), std::clog, false);
 		if (!m_name.empty()) m_resource->SetName((m_name + L".Resource").c_str());
 
 		// Create SRV
-		if (hasSRV)
-		{
-			N_RETURN(CreateSRVs(arraySize, m_format, numMips, sampleCount, isCubeMap), false);
-			N_RETURN(CreateSRVLevels(arraySize, numMips, m_format, sampleCount, isCubeMap), false);
-		}
+		if (hasSRV) N_RETURN(CreateSRVs(arraySize, m_format, numMips, sampleCount, isCubeMap), false);
 
-		// Create UAV
+		// Create UAVs
 		if (hasUAV)
 		{
 			N_RETURN(CreateUAVs(arraySize, m_format, numMips), false);
 			if (needPackedUAV) N_RETURN(CreateUAVs(arraySize, formatUAV, numMips, &m_packedUavs), false);
 		}
 
+		// Create SRV for each level
+		if (hasSRV && hasUAV) N_RETURN(CreateSRVLevels(arraySize, numMips, m_format, sampleCount, isCubeMap), false);
+
 		return true;
 	}
+
+	bool Texture2D::Upload(CommandList* pCommandList, Resource& uploader,
+		const SubresourceData* pSubresourceData, uint32_t numSubresources,
+		ResourceState dstState, uint32_t firstSubresource)
+	{
+		N_RETURN(pSubresourceData, false);
+
+		// Create the GPU upload buffer.
+		if (!uploader)
+		{
+			const CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_UPLOAD);
+			const auto uploadBufferSize = GetRequiredIntermediateSize(m_resource.get(), firstSubresource, numSubresources);
+			const auto desc = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);
+
+			V_RETURN(m_device->CreateCommittedResource(&heapProperties, D3D12_HEAP_FLAG_NONE, &desc,
+				D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&uploader)), std::clog, false);
+			if (!m_name.empty()) uploader->SetName((m_name + L".UploaderResource").c_str());
+		}
+
+		// Copy data to the intermediate upload heap and then schedule a copy 
+		// from the upload heap to the Texture2D.
+
+
+		return true;
+	}
+	bool Texture2D::Upload(CommandList* pCommandList, Resource& uploader, const void* pData,
+		uint8_t stride, ResourceState dstState)
+	{
+		return true;
+	}
+	bool Texture2D::CreateSRVs(uint32_t arraySize, Format format, uint8_t numMip,
+		uint8_t sampleCount, bool isCubeMap)
+	{
+		return true;
+	}
+	bool Texture2D::CreateSRVLevels(uint32_t arraySize, uint8_t numMips, Format format,
+		uint8_t sampleCount, bool isCubeMap)
+	{
+		return true;
+	}
+	bool Texture2D::CreateUAVs(uint32_t arraySize, Format format, uint8_t numMips,
+		std::vector<Descriptor>* pUavs)
+	{
+		return true;
+	}
+
+	uint32_t Texture2D::SetBarrier(ResourceBarrier* pBarriers, ResourceState dstState,
+		uint32_t numBarriers, uint32_t subresource, BarrierFlag flags) 
+	{
+		return ResourceBase::SetBarrier(pBarriers, dstState, numBarriers, subresource, flags);
+	}
+
+	uint32_t Texture2D::SetBarrier(ResourceBarrier* pBarriers, uint8_t mipLevel, ResourceState dstState,
+		uint32_t numBarriers, uint32_t slice, BarrierFlag flags) 
+	{
+		const auto desc = m_resource->GetDesc();
+		const auto subresource = D3D12CalcSubresource(mipLevel, slice, 0, desc.MipLevels, desc.DepthOrArraySize);
+
+		return SetBarrier(pBarriers, dstState, numBarriers, subresource, flags);
+	}
+
+	const Descriptor& Texture2D::GetUAV(uint8_t index) const { Descriptor des; return des; }
+	const Descriptor& Texture2D::GetPackedUAV(uint8_t index) const { Descriptor des; return des; }
+	const Descriptor& Texture2D::GetSRVLevel(uint8_t level) const { Descriptor des; return des; }
 
 }

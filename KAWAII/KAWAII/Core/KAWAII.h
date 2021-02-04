@@ -1,6 +1,6 @@
 #pragma once
 
-#include "stdafx.h"
+#include "../stdafx.h"
 
 #pragma warning(disable:4250)
 #define VOID_RETURN

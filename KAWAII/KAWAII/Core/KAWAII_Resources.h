@@ -2,7 +2,7 @@
 
 #include "../stdafx.h"
 #include "KAWAII.h"
-
+//https://software.intel.com/content/www/us/en/develop/articles/introduction-to-resource-binding-in-microsoft-directx-12.html
 namespace KAWAII
 {
 	//--------------------------------------------------------------------------------------
@@ -57,7 +57,7 @@ namespace KAWAII
 
 		bool Create(const Device& device, uint32_t width, uint32_t height, Format format,
 			uint32_t arraySize = 1, ResourceFlag resourceFlags = ResourceFlag::NONE,
-			uint8_t numMips = 1, uint8_t sampleCount = 1, const float* pClearColor = nullptr,
+			uint8_t numMips = 1, uint8_t sampleCount = 1, MemoryType memoryType = MemoryType::DEFAULT,
 			bool isCubeMap = false, const wchar_t* name = nullptr);
 		bool Upload(CommandList* pCommandList, Resource& uploader,
 			const SubresourceData* pSubresourceData, uint32_t numSubresources = 1,
@@ -74,11 +74,12 @@ namespace KAWAII
 		uint32_t SetBarrier(ResourceBarrier* pBarriers, ResourceState dstState,
 			uint32_t numBarriers = 0, uint32_t subresource = BARRIER_ALL_SUBRESOURCES,
 			BarrierFlag flags = BarrierFlag::NONE);
-		virtual uint32_t SetBarrier(ResourceBarrier* pBarriers, uint8_t mipLevel, ResourceState dstState,
+		uint32_t SetBarrier(ResourceBarrier* pBarriers, uint8_t mipLevel, ResourceState dstState,
 			uint32_t numBarriers = 0, uint32_t slice = 0, BarrierFlag flags = BarrierFlag::NONE);
 
 		void Blit();
-		virtual void GenerateMips();
+		uint32_t Blit(uint32_t numBarriers = 0);
+		uint32_t GenerateMips();
 
 		const Descriptor& GetUAV(uint8_t index = 0) const;
 		const Descriptor& GetPackedUAV(uint8_t index = 0) const;

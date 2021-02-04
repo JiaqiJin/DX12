@@ -46,7 +46,7 @@
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -159,6 +159,11 @@
     <ClCompile Include="Core\KAWAIICommand_DX12.cpp" />
     <ClCompile Include="Core\KAWAII_Resource.cpp" />
     <ClCompile Include="Core\KAWAII_DX12.cpp" />
+    <ClCompile Include="FrameWork\DXFramework.cpp" />
+    <ClCompile Include="FrameWork.cpp" />
+    <ClCompile Include="FrameWork\WinApplication.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="Renderer\Renderer.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
@@ -172,6 +177,12 @@
     <ClInclude Include="Core\KAWAIIEnum_DX12.h" />
     <ClInclude Include="Core\KAWAII_DX12.h" />
     <ClInclude Include="Core\KAWAII_Resources.h" />
+    <ClInclude Include="FrameWork\DXFramework.h" />
+    <ClInclude Include="FrameWork\DXFrameworkHelper.h" />
+    <ClInclude Include="FrameWork.h" />
+    <ClInclude Include="FrameWork\Timer.h" />
+    <ClInclude Include="FrameWork\WinApplication.h" />
+    <ClInclude Include="Renderer\Renderer.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
