@@ -51,6 +51,7 @@
 #include "Common/d3dx12.h"
 
 #include <vector>
+#include <map>
 #include <algorithm>
 #include <exception>
 #include <memory>
@@ -65,6 +66,9 @@
 #ifdef _DEBUG
 #include <dxgidebug.h>
 #endif
+
+#include "Core/VectorMath.h"
+#include "Core/Utility.h"
 
 namespace MyDirectX
 {
