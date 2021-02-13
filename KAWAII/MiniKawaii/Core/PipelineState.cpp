@@ -1,10 +1,10 @@
 #include "PipelineState.h"
 #include "RootSignature.h"
-#include "Core/Hash.h"
+#include "../Core/Hash.h"
 #include <thread>
 #include <mutex>
 
-using namespace MyDirectX;
+using namespace Rendering;
 
 using Microsoft::WRL::ComPtr;
 

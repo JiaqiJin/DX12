@@ -29,8 +29,9 @@
     <ClInclude Include="Common\MyLight.h" />
     <ClInclude Include="Common\MyUtils.h" />
     <ClInclude Include="Common\MyWindow.h" />
+    <ClInclude Include="Core\CommandSignature.h" />
     <ClInclude Include="Core\Hash.h" />
-    <ClInclude Include="PipelineState.h" />
+    <ClInclude Include="Core\PipelineState.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Common\resource.h" />
     <ClInclude Include="Core\Camera.h" />
@@ -47,7 +48,7 @@
     <ClInclude Include="Core\Math\Vector.h" />
     <ClInclude Include="Core\Utility.h" />
     <ClInclude Include="Core\VectorMath.h" />
-    <ClInclude Include="RootSignature.h" />
+    <ClInclude Include="Core\RootSignature.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Common\DeviceResources.cpp" />
@@ -60,12 +61,13 @@
     <ClCompile Include="Common\MyUtils.cpp" />
     <ClCompile Include="Common\MyWindow.cpp" />
     <ClCompile Include="Core\Camera.cpp" />
+    <ClCompile Include="Core\CommandSignature.cpp" />
     <ClCompile Include="Core\Math\Frustum.cpp" />
     <ClCompile Include="Core\Math\Random.cpp" />
     <ClCompile Include="Core\Utility.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="PipelineState.cpp" />
-    <ClCompile Include="RootSignature.cpp" />
+    <ClCompile Include="Core\PipelineState.cpp" />
+    <ClCompile Include="Core\RootSignature.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Core\Math\Functions.inl" />

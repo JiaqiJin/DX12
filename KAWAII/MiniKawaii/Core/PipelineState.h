@@ -1,8 +1,8 @@
 #pragma once
 
-#include "pch.h"
+#include "../pch.h"
 
-namespace MyDirectX
+namespace Rendering
 {
 	class RootSignature;
 	// https://docs.microsoft.com/en-us/windows/win32/direct3d12/managing-graphics-pipeline-state-in-direct3d-12

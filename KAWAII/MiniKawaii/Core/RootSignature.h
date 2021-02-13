@@ -1,7 +1,7 @@
 #pragma once
-#include "pch.h"
+#include "../pch.h"
 
-namespace MyDirectX
+namespace Rendering
 {
 	class RootParameter
 	{

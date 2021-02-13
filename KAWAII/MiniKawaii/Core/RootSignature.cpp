@@ -1,9 +1,9 @@
 ﻿#include "RootSignature.h"
-#include "Core/Hash.h"
+#include "../Core/Hash.h"
 #include <mutex>
 #include <thread>
 
-using namespace MyDirectX;
+using namespace Rendering;
 
 using Microsoft::WRL::ComPtr;
 
