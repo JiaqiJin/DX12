@@ -18,7 +18,7 @@
 using namespace DirectX;
 using std::vector;
 
-namespace MyDirectX
+namespace Rendering
 {
 	namespace Geometry
 	{

@@ -5,7 +5,7 @@
 //#include "DeviceResources.h"
 //#include "GameTimer.h"
 
-namespace MyDirectX
+namespace Rendering
 {
 	class MyWindow;
 	class DeviceResources;

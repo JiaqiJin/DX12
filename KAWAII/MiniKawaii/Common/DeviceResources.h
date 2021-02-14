@@ -5,7 +5,7 @@
 #pragma once
 #include "../pch.h"
 
-namespace MyDirectX
+namespace Rendering
 {
 	// controls all the DirectX device resources
 	class DeviceResources

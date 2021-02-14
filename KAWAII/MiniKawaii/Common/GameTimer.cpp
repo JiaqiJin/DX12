@@ -1,7 +1,7 @@
 #include "GameTimer.h"
 #include <Windows.h>
 
-using namespace MyDirectX;
+using namespace Rendering;
 
 
 GameTimer::GameTimer() : mSecondsPerCount(0.0), mDeltaTime(-1.0), mBaseTime(0),

@@ -1,6 +1,6 @@
 #include "DeviceResources.h"
 
-using namespace MyDirectX;
+using namespace Rendering;
 
 using Microsoft::WRL::ComPtr;
 

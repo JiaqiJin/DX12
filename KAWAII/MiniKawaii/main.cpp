@@ -30,7 +30,7 @@ int main(int argc, const char* argv[])
 
 	HINSTANCE hInst = GetModuleHandle(0);
 
-	MyDirectX::MyBaseApp myApp(hInst, L"Hello, World!");
+	Rendering::MyBaseApp myApp(hInst, L"Hello, World!");
 
 	int ret = 0;
 	if (myApp.Init())

@@ -1,6 +1,6 @@
 #include "MyUtils.h"
 
-using namespace MyDirectX;
+using namespace Rendering;
 
 std::vector<CD3DX12_STATIC_SAMPLER_DESC> Helpers::GetStaticSamplers()
 {

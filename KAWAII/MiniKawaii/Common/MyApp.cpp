@@ -15,7 +15,7 @@
 // to use any of these GUID valus, include DXGIDebug.h in your code and link to dxguid.lib
 #pragma comment(lib, "d3dcompiler.lib")
 
-using namespace MyDirectX;
+using namespace Rendering;
 
 MyApp* MyApp::m_App = nullptr;
 

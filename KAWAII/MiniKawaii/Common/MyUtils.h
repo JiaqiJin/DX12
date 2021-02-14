@@ -7,7 +7,7 @@
 //#include <cstdint>
 #include "../pch.h"
 
-namespace MyDirectX
+namespace Rendering
 {
 	class MyMath
 	{

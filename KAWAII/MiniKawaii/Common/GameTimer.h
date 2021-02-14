@@ -4,7 +4,7 @@
 
 #pragma once
 
-namespace MyDirectX
+namespace Rendering
 {
 	class GameTimer
 	{

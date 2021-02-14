@@ -13,7 +13,7 @@
 
 using namespace DirectX;
 
-namespace MyDirectX
+namespace Rendering
 {
 	namespace Camera
 	{

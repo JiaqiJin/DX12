@@ -3,7 +3,7 @@
 #include "GameTimer.h"
 #include <d3dcompiler.h>
 
-using namespace MyDirectX;
+using namespace Rendering;
 using namespace DirectX;
 
 using Microsoft::WRL::ComPtr;

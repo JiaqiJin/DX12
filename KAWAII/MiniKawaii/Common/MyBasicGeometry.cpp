@@ -1,6 +1,6 @@
 #include "MyBasicGeometry.h"
 
-using namespace MyDirectX::Geometry;
+using namespace Rendering::Geometry;
 
 void MyBasicGeometry::BasicBox(float width, float height, float depth, Mesh& mesh)
 {

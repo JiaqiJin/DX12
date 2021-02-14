@@ -70,7 +70,7 @@
 #include "Core/VectorMath.h"
 #include "Core/Utility.h"
 
-namespace MyDirectX
+namespace Rendering
 {
 	// Helper class for COM exceptions
 	class com_exception : public std::exception

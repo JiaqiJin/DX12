@@ -2,7 +2,7 @@
 
 #include "MyApp.h"
 
-namespace MyDirectX
+namespace Rendering
 {
 	class MyBaseApp : public MyApp
 	{

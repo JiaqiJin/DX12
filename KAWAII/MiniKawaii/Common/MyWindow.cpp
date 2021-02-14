@@ -2,9 +2,9 @@
 #include "resource.h"
 #include "MyApp.h"
 
-using namespace MyDirectX;
+using namespace Rendering;
 
-LRESULT CALLBACK MyDirectX::MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK Rendering::MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	// forward hwnd on because we can get messages (e.g. WM_CREATE)
 	// before CreateWindow returns, and thus before mMainWnd is valid
