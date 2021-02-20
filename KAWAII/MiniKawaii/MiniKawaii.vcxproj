@@ -30,6 +30,7 @@
     <ClInclude Include="Common\MyUtils.h" />
     <ClInclude Include="Common\MyWindow.h" />
     <ClInclude Include="Core\CommandAllocatorPool.h" />
+    <ClInclude Include="Core\CommandListManager.h" />
     <ClInclude Include="Core\CommandSignature.h" />
     <ClInclude Include="Core\Hash.h" />
     <ClInclude Include="Core\PipelineState.h" />
@@ -63,6 +64,7 @@
     <ClCompile Include="Common\MyWindow.cpp" />
     <ClCompile Include="Core\Camera.cpp" />
     <ClCompile Include="Core\CommandAllocatorPool.cpp" />
+    <ClCompile Include="Core\CommandListManager.cpp" />
     <ClCompile Include="Core\CommandSignature.cpp" />
     <ClCompile Include="Core\Math\Frustum.cpp" />
     <ClCompile Include="Core\Math\Random.cpp" />

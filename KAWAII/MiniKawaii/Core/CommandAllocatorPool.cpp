@@ -36,6 +36,7 @@ namespace Rendering
 			if (allocatorPair.first <= completedFenceValue)
 			{
 				pAllocator = allocatorPair.second;
+				//re-use an existing command
 				ASSERT_SUCCEEDED(pAllocator->Reset());
 				m_ReadyAllocators.pop();
 			}
