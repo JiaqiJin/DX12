@@ -4,7 +4,7 @@
 #include <queue>
 #include <mutex>
 #include <stdint.h>
-
+// http://alextardif.com/D3D11To12P1.html
 namespace Rendering
 {
 	class CommandListManager;

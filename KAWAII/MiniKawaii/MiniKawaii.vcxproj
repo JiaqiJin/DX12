@@ -29,9 +29,13 @@
     <ClInclude Include="Common\MyLight.h" />
     <ClInclude Include="Common\MyUtils.h" />
     <ClInclude Include="Common\MyWindow.h" />
+    <ClInclude Include="Core\Color.h" />
     <ClInclude Include="Core\CommandAllocatorPool.h" />
     <ClInclude Include="Core\CommandListManager.h" />
     <ClInclude Include="Core\CommandSignature.h" />
+    <ClInclude Include="Core\DescriptorHeap.h" />
+    <ClInclude Include="Core\DynamicUploadBuffer.h" />
+    <ClInclude Include="Core\Graphics.h" />
     <ClInclude Include="Core\Hash.h" />
     <ClInclude Include="Core\PipelineState.h" />
     <ClInclude Include="pch.h" />
@@ -63,9 +67,13 @@
     <ClCompile Include="Common\MyUtils.cpp" />
     <ClCompile Include="Common\MyWindow.cpp" />
     <ClCompile Include="Core\Camera.cpp" />
+    <ClCompile Include="Core\Color.cpp" />
     <ClCompile Include="Core\CommandAllocatorPool.cpp" />
     <ClCompile Include="Core\CommandListManager.cpp" />
     <ClCompile Include="Core\CommandSignature.cpp" />
+    <ClCompile Include="Core\DescriptorHeap.cpp" />
+    <ClCompile Include="Core\DynamicUploadBuffer.cpp" />
+    <ClCompile Include="Core\Graphics.cpp" />
     <ClCompile Include="Core\Math\Frustum.cpp" />
     <ClCompile Include="Core\Math\Random.cpp" />
     <ClCompile Include="Core\Utility.cpp" />
