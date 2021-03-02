@@ -19,6 +19,12 @@ using namespace Rendering;
 
 MyApp* MyApp::m_App = nullptr;
 
+UINT MyApp::GetDescriptorIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE type)
+{
+	ASSERT(m_App != nullptr && m_App->pDevice != nullptr);
+
+	return m_App->pDevice->GetDescriptorHandleIncrementSize(type);
+}
 
 MyApp* MyApp::GetApp()
 {

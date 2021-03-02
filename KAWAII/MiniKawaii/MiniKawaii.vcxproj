@@ -35,6 +35,8 @@
     <ClInclude Include="Core\CommandSignature.h" />
     <ClInclude Include="Core\DescriptorHeap.h" />
     <ClInclude Include="Core\DynamicUploadBuffer.h" />
+    <ClInclude Include="Core\GpuBuffer.h" />
+    <ClInclude Include="Core\GpuResource.h" />
     <ClInclude Include="Core\Graphics.h" />
     <ClInclude Include="Core\Hash.h" />
     <ClInclude Include="Core\PipelineState.h" />
@@ -73,6 +75,7 @@
     <ClCompile Include="Core\CommandSignature.cpp" />
     <ClCompile Include="Core\DescriptorHeap.cpp" />
     <ClCompile Include="Core\DynamicUploadBuffer.cpp" />
+    <ClCompile Include="Core\GpuBuffer.cpp" />
     <ClCompile Include="Core\Graphics.cpp" />
     <ClCompile Include="Core\Math\Frustum.cpp" />
     <ClCompile Include="Core\Math\Random.cpp" />
