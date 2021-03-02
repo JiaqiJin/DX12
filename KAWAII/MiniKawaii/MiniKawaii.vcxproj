@@ -39,6 +39,7 @@
     <ClInclude Include="Core\GpuResource.h" />
     <ClInclude Include="Core\Graphics.h" />
     <ClInclude Include="Core\Hash.h" />
+    <ClInclude Include="Core\LinearAllocator.h" />
     <ClInclude Include="Core\PipelineState.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Common\resource.h" />
@@ -77,6 +78,7 @@
     <ClCompile Include="Core\DynamicUploadBuffer.cpp" />
     <ClCompile Include="Core\GpuBuffer.cpp" />
     <ClCompile Include="Core\Graphics.cpp" />
+    <ClCompile Include="Core\LinearAllocator.cpp" />
     <ClCompile Include="Core\Math\Frustum.cpp" />
     <ClCompile Include="Core\Math\Random.cpp" />
     <ClCompile Include="Core\Utility.cpp" />

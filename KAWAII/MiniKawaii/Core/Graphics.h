@@ -15,5 +15,6 @@ namespace Rendering
 	public:
 		static CommandListManager s_CommandManager;
 		static ContextManager s_ContextManager;
+		static ID3D12Device* s_Device;
 	};
 }
