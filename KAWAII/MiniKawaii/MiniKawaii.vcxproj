@@ -35,6 +35,7 @@
     <ClInclude Include="Core\CommandContext.h" />
     <ClInclude Include="Core\CommandListManager.h" />
     <ClInclude Include="Core\CommandSignature.h" />
+    <ClInclude Include="Core\DepthBuffer.h" />
     <ClInclude Include="Core\DescriptorHeap.h" />
     <ClInclude Include="Core\DynamicUploadBuffer.h" />
     <ClInclude Include="Core\GpuBuffer.h" />
@@ -80,6 +81,7 @@
     <ClCompile Include="Core\CommandAllocatorPool.cpp" />
     <ClCompile Include="Core\CommandListManager.cpp" />
     <ClCompile Include="Core\CommandSignature.cpp" />
+    <ClCompile Include="Core\DepthBuffer.cpp" />
     <ClCompile Include="Core\DescriptorHeap.cpp" />
     <ClCompile Include="Core\DynamicUploadBuffer.cpp" />
     <ClCompile Include="Core\GpuBuffer.cpp" />
