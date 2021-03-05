@@ -90,8 +90,9 @@ namespace Rendering
 		cbvDesc.SizeInBytes = size;
 
 		D3D12_CPU_DESCRIPTOR_HANDLE hCBV;
-
-		return hCBV;
+		//TODO
+		//return hCBV;
+		return m_UAV;
 	}
 
 	D3D12_RESOURCE_DESC GpuBuffer::DescribeBuffer()

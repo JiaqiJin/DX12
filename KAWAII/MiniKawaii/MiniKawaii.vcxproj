@@ -30,7 +30,9 @@
     <ClInclude Include="Common\MyUtils.h" />
     <ClInclude Include="Common\MyWindow.h" />
     <ClInclude Include="Core\Color.h" />
+    <ClInclude Include="Core\ColorBuffer.h" />
     <ClInclude Include="Core\CommandAllocatorPool.h" />
+    <ClInclude Include="Core\CommandContext.h" />
     <ClInclude Include="Core\CommandListManager.h" />
     <ClInclude Include="Core\CommandSignature.h" />
     <ClInclude Include="Core\DescriptorHeap.h" />
@@ -41,6 +43,9 @@
     <ClInclude Include="Core\Hash.h" />
     <ClInclude Include="Core\LinearAllocator.h" />
     <ClInclude Include="Core\PipelineState.h" />
+    <ClInclude Include="Core\PixelBuffer.h" />
+    <ClInclude Include="Core\stb_image.h" />
+    <ClInclude Include="Core\stb_image_write.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Common\resource.h" />
     <ClInclude Include="Core\Camera.h" />
@@ -71,6 +76,7 @@
     <ClCompile Include="Common\MyWindow.cpp" />
     <ClCompile Include="Core\Camera.cpp" />
     <ClCompile Include="Core\Color.cpp" />
+    <ClCompile Include="Core\ColorBuffer.cpp" />
     <ClCompile Include="Core\CommandAllocatorPool.cpp" />
     <ClCompile Include="Core\CommandListManager.cpp" />
     <ClCompile Include="Core\CommandSignature.cpp" />
@@ -81,6 +87,7 @@
     <ClCompile Include="Core\LinearAllocator.cpp" />
     <ClCompile Include="Core\Math\Frustum.cpp" />
     <ClCompile Include="Core\Math\Random.cpp" />
+    <ClCompile Include="Core\PixelBuffer.cpp" />
     <ClCompile Include="Core\Utility.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Core\PipelineState.cpp" />

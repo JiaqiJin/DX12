@@ -40,3 +40,4 @@ int main(int argc, const char* argv[])
 
 	return ret;
 }
+//https://www.aprendeunrealengine.com/directx-12-window/
