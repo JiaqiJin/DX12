@@ -29,7 +29,7 @@ namespace Rendering
 	protected:
 		const RootSignature* m_RootSignature;
 
-		ID3D12PipelineState* m_PSO;		// 这里并不管理生命周期
+		ID3D12PipelineState* m_PSO;	
 	};
 
 	class GraphicsPSO : public PSO
@@ -67,6 +67,20 @@ namespace Rendering
 	private:
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC m_PSODesc;
 		std::shared_ptr<const D3D12_INPUT_ELEMENT_DESC> m_InputLayouts;
+	};
+
+	class ComputePSO : public PSO
+	{
+	public:
+		ComputePSO();
+
+		void SetComputeShader(const void* binary, size_t size) { m_PSODesc.CS = CD3DX12_SHADER_BYTECODE(const_cast<void*>(binary), size); }
+		void SetComputeShader(const D3D12_SHADER_BYTECODE& binary) { m_PSODesc.CS = binary; }
+
+		void Finalize(ID3D12Device* pDevice);
+
+	private:
+		D3D12_COMPUTE_PIPELINE_STATE_DESC m_PSODesc;
 	};
 
 }

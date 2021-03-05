@@ -8,7 +8,7 @@ namespace Rendering
 	{
 		AssociateWithResource(pDevice, name, pResource, D3D12_RESOURCE_STATE_PRESENT);
 
-		//m_RTVHandle = Graphics::AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+		m_RTVHandle = Graphics::AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 		pDevice->CreateRenderTargetView(pResource, nullptr, m_RTVHandle);
 	}
 
@@ -111,8 +111,8 @@ namespace Rendering
 
 		if (m_SRVHandle.ptr == D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN)
 		{
-			//m_RTVHandle = Graphics::AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-			//m_SRVHandle = Graphics::AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+			m_RTVHandle = Graphics::AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+			m_SRVHandle = Graphics::AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 		}
 
 		ID3D12Resource* pResource = m_pResource.Get();
@@ -131,7 +131,7 @@ namespace Rendering
 		{
 			if (m_UAVHandle[i].ptr == D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN)
 			{
-				//m_UAVHandle[i] = Graphics::AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+				m_UAVHandle[i] = Graphics::AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 			}
 
 			pDevice->CreateUnorderedAccessView(pResource, nullptr, &uavDesc, m_UAVHandle[i]);

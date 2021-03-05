@@ -76,16 +76,14 @@ void GraphicsPSO::SetInputLayout(UINT numElements, const D3D12_INPUT_ELEMENT_DES
 {
 	m_PSODesc.InputLayout.NumElements = numElements;
 
-	if(numElements > 0)
+	if (numElements > 0)
 	{
 		D3D12_INPUT_ELEMENT_DESC* newElements = (D3D12_INPUT_ELEMENT_DESC*)malloc(sizeof(D3D12_INPUT_ELEMENT_DESC) * numElements);
 		memcpy(newElements, pInputElementDesc, numElements * sizeof(D3D12_INPUT_ELEMENT_DESC));
 		m_InputLayouts.reset((const D3D12_INPUT_ELEMENT_DESC*)newElements);
 	}
 	else
-	{
 		m_InputLayouts = nullptr;
-	}
 }
 
 void GraphicsPSO::SetPrimitiveRestart(D3D12_INDEX_BUFFER_STRIP_CUT_VALUE ibProps)
@@ -119,7 +117,8 @@ void GraphicsPSO::Finalize(ID3D12Device* pDevice)
 			firstCompile = true;
 			PSORef = s_GraphicsPSOHashMap[hashCode].GetAddressOf();
 		}
-		PSORef = iter->second.GetAddressOf();
+		else
+			PSORef = iter->second.GetAddressOf();
 	}
 
 	if (firstCompile)
@@ -132,5 +131,52 @@ void GraphicsPSO::Finalize(ID3D12Device* pDevice)
 		while (*PSORef == nullptr)
 			std::this_thread::yield();
 		m_PSO = *PSORef;
+	}
+}
+
+// ComputePSO
+ComputePSO::ComputePSO()
+{
+	ZeroMemory(&m_PSODesc, sizeof(m_PSODesc));
+	m_PSODesc.NodeMask = 1;
+}
+
+void ComputePSO::Finalize(ID3D12Device* pDevice)
+{
+	ASSERT(pDevice != nullptr);
+
+	// make sure the root signature is finalized first
+	m_PSODesc.pRootSignature = m_RootSignature->GetSignature();
+	ASSERT(m_PSODesc.pRootSignature != nullptr);
+
+	size_t hashCode = Utility::HashState(&m_PSODesc);
+
+	ID3D12PipelineState** PSORef = nullptr;
+	bool firstCompile = false;
+	{
+		static std::mutex s_HashMapMutex;
+		std::lock_guard<std::mutex> lockGuard(s_HashMapMutex);
+
+		auto iter = s_ComputePSOHashMap.find(hashCode);
+		// reserve space so the nect inquiry will find that someone got here first
+		if (iter == s_ComputePSOHashMap.end())
+		{
+			firstCompile = true;
+			PSORef = s_ComputePSOHashMap[hashCode].GetAddressOf();
+		}
+		else
+			PSORef = iter->second.GetAddressOf();
+
+		if (firstCompile)
+		{
+			ASSERT_SUCCEEDED(pDevice->CreateComputePipelineState(&m_PSODesc, IID_PPV_ARGS(&m_PSO)));
+			s_ComputePSOHashMap[hashCode].Attach(m_PSO);
+		}
+		else
+		{
+			while (*PSORef == nullptr)
+				std::this_thread::yield();
+			m_PSO = *PSORef;
+		}
 	}
 }

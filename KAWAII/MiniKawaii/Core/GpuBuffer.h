@@ -105,7 +105,7 @@ namespace Rendering
 
 		ByteAddressBuffer& GetCounterBuffer() { return m_CounterBuffer; }
 
-		//const D3D12_CPU_DESCRIPTOR_HANDLE& GetCounterSRV(CommandContext& context);
+		//const D3D12_CPU_DESCRIPTOR_HANDLE& GetCounterSRV(CommandContext& context); TODO
 		//const D3D12_CPU_DESCRIPTOR_HANDLE& GetCounterUAV(CommandContext& context);
 	private:
 		ByteAddressBuffer m_CounterBuffer;
