@@ -52,7 +52,7 @@ namespace Math
             return std::uniform_real_distribution<float>(MinVal, MaxVal)(m_gen);
         }
 
-        void SetSeed(UINT s)
+        void SetSeed( UINT s )
         {
             m_gen.seed(s);
         }

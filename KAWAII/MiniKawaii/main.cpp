@@ -1,43 +1,27 @@
-﻿#include "Common/MyBaseApp.h"
-#include "Core/Utility.h"
+﻿#include "pch.h"
 
-// I. windows程序 预处理定义-_WINDOWS,连接器子系统SubSystem:WINDOWS
-//int WINAPI WinMain(_In_ HINSTANCE hInstance,
-//	_In_opt_ HINSTANCE hPrevInstance,
-//	_In_ LPSTR lpCmdLine,
-//	_In_ int nCmdShow)
-//{
-//	MyDirectX::MyBaseApp myApp(hInstance, L"Hello, World!");
-//
-//	int ret = 0;
-//	if (myApp.Init())
-//	{
-//		ret = myApp.Run();
-//	}
-//
-//	return ret;
-//}
+#include "Engine.h"
 
-// II.console程序 预处理定义-_CONSOLE,连接器子系统SubSystem:CONSOLE
-// 还需链接 runtimeobject.lib
-#pragma comment(lib, "runtimeobject.lib")
+using namespace DirectX;
 
-int main(int argc, const char* argv[])
+_Use_decl_annotations_
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
 {
-
-	Microsoft::WRL::Wrappers::RoInitializeWrapper InitializeWinRT(RO_INIT_MULTITHREADED);
-	ASSERT_SUCCEEDED(InitializeWinRT);
-
-	HINSTANCE hInst = GetModuleHandle(0);
-
-	Rendering::MyBaseApp myApp(hInst, L"Hello, World!");
-
-	int ret = 0;
-	if (myApp.Init())
+	try
 	{
-		ret = myApp.Run();
-	}
+		Engine engine(hInstance);
 
-	return ret;
-}
-//https://www.aprendeunrealengine.com/directx-12-window/
+		EngineCreateInfo engineCI;
+		engineCI.Width = 800;
+		engineCI.Height = 800;
+
+		auto setup = []() {};
+
+		return engine.RunN(engineCI, setup);
+	}
+	catch (DxException& e)
+	{
+		MessageBox(nullptr, e.ToString().c_str(), L"HR Failed", MB_OK);
+		return 0;
+	}
+};

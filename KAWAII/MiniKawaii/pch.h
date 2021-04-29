@@ -1,102 +1,69 @@
-//
-// pch.h
-// Header for standard system include files.
-//
+﻿#ifndef PCH_H
+#define PCH_H
 
-#pragma once
-
-#include <winsdkver.h>
-#define _WIN32_WINNT 0x0A00
-#include <sdkddkver.h>
-
-// Use the C++ standard templated min/max
-#define NOMINMAX
-
-// DirectX apps don't need GDI
-#define NODRAWTEXT
-#define NOGDI
-#define NOBITMAP
-
-// Include <mcx.h> if you need this
-#define NOMCX
-
-// Include <winsvc.h> if you need this
-#define NOSERVICE
-
-// WinHelp is deprecated
-#define NOHELP
-
+// 添加要在此处预编译的标头
+#ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
-
-#include <wrl/client.h>
-#include <wrl/event.h>
-
-#include <d3d12.h>
-
-#if defined(NTDDI_WIN10_RS2)
-#include <dxgi1_6.h>
-#else
-#include <dxgi1_5.h>
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
 #endif
 
+// Windows
+#include <windows.h>
+#include <WindowsX.h>
+#include <wrl.h>
+
+
+// Direct3d12
+#include <d3d12.h>
+#include <D3d12SDKLayers.h>
+#include <dxgi1_4.h>
+#include <D3Dcompiler.h>
 #include <DirectXMath.h>
 #include <DirectXColors.h>
 #include <DirectXPackedVector.h>
 
-// DX12 - MiniEngine
-#define D3D12_GPU_VIRTUAL_ADDRESS_NULL		((D3D12_GPU_VIRTUAL_ADDRESS)0)
-#define D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN	((D3D12_GPU_VIRTUAL_ADDRESS)-1)
+#pragma comment(lib, "d3d12.lib")
+#pragma comment(lib, "dxgi.lib")
+#pragma comment(lib,"d3dcompiler.lib")
+#pragma comment(lib,"dxguid.lib")
 
+// Util
 #include "Common/d3dx12.h"
+#include "Util/DxException.h"
+#include "Util/d3dUtil.h"
+#include "Util/MathHelper.h"
+#include "Util/Singleton.h"
+#include "Util/Debug.h"
 
+// C++
+#include <array>
 #include <vector>
+#include <queue>
+#include <deque>
+#include <set>
 #include <map>
+#include <unordered_map>
+#include <unordered_set>
 #include <algorithm>
-#include <exception>
 #include <memory>
-#include <stdexcept>
+#include <string>
+#include <exception>
+#include <shellapi.h>
 #include <cassert>
-#include <stdio.h>
+#include <iostream>
+#include <limits>
 
-// To use graphics and CPU markup events with the latest version of PIX, change this to include <pix3.h>
-// then add the NuGet package WinPixEventRuntime to the project.
-#include <pix.h>
+#include "Math/Common.h"
+#include "Math/VectorMath.h"
 
-#ifdef _DEBUG
-#include <dxgidebug.h>
-#endif
 
-#include "Core/VectorMath.h"
-#include "Core/Utility.h"
 
-namespace Rendering
-{
-	// Helper class for COM exceptions
-	class com_exception : public std::exception
-	{
-	public:
-		com_exception(HRESULT hr) : result(hr) {}
+#define D3D12_GPU_VIRTUAL_ADDRESS_NULL      ((D3D12_GPU_VIRTUAL_ADDRESS)0)
+#define D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN   ((D3D12_GPU_VIRTUAL_ADDRESS)-1)
 
-		virtual const char* what() const override
-		{
-			static char s_str[64] = {};
-			sprintf_s(s_str, "Failure with HRESULT of %08X", static_cast<unsigned int>(result));
-			return s_str;
-		}
+// Dynamic Resource的Page大小，单位字节，1M
+#define DYNAMIC_RESOURCE_PAGE_SIZE 1048576
 
-	private:
-		HRESULT result;
-	};
-
-	// Helper utility converts D3D API failures into exceptions.
-	inline void ThrowIfFailed(HRESULT hr)
-	{
-		if (FAILED(hr))
-		{
-			throw com_exception(hr);
-		}
-	}
-
-	const unsigned SCR_WIDTH = 640, SCR_HEIGHT = 480;
-}
+#endif //PCH_H
