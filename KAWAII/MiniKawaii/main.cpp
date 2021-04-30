@@ -1,7 +1,7 @@
 ﻿#include "pch.h"
 
 #include "Engine.h"
-
+// http://diligentgraphics.com/diligent-engine/architecture/d3d12/
 using namespace DirectX;
 
 _Use_decl_annotations_

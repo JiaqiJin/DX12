@@ -29,6 +29,8 @@
     <ClInclude Include="Math\Transform.h" />
     <ClInclude Include="Math\Vector.h" />
     <ClInclude Include="Math\VectorMath.h" />
+    <ClInclude Include="RHI\CommandQueue.h" />
+    <ClInclude Include="RHI\RenderDevice.h" />
     <ClInclude Include="Util\d3dUtil.h" />
     <ClInclude Include="Util\Debug.h" />
     <ClInclude Include="Util\DxException.h" />
@@ -45,6 +47,8 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Math\Random.cpp" />
     <ClCompile Include="pch.cpp" />
+    <ClCompile Include="RHI\CommandQueue.cpp" />
+    <ClCompile Include="RHI\RenderDevice.cpp" />
     <ClCompile Include="Util\d3dUtil.cpp" />
     <ClCompile Include="Util\Debug.cpp" />
     <ClCompile Include="Util\DxException.cpp" />

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "RHI/RenderDevice.h"
+
 struct EngineCreateInfo
 {
 	UINT Width;
@@ -48,6 +50,11 @@ private:
 	bool m_resizing = false;
 	bool m_minimized = false;
 	bool m_maximized = false;
+
+	// RHI
+	Microsoft::WRL::ComPtr<IDXGIFactory4> m_DXGIFactory;
+
+	std::unique_ptr<RHI::RenderDevice> m_RenderDevice;
 };
 
 template<typename TSetup>

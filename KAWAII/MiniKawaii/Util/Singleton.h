@@ -6,13 +6,13 @@ class Singleton
 public:
 	Singleton()
 	{
-		assert(!ms_Singleton);
+		assert(!m_Singleton);
 		m_Singleton = static_cast<T*>(this);
 	}
 
 	~Singleton()
 	{
-		assert(ms_Singleton);
+		assert(m_Singleton);
 		m_Singleton = nullptr;
 	}
 	
@@ -32,3 +32,6 @@ public:
 protected:
 	static T* m_Singleton;
 };
+
+template<typename T>
+T* Singleton<T>::m_Singleton = nullptr;

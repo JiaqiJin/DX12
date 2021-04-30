@@ -29,6 +29,21 @@ void Engine::Initialize(const EngineCreateInfo& engineCI)
     m_Height = engineCI.Height;
     m_Aspect = static_cast<float>(m_Width) / static_cast<float>(m_Height);
     InitialMainWindow();
+
+    // Enable the D3D12 debug layer.
+#if defined(DEBUG) || defined(_DEBUG) 
+    {
+        ComPtr<ID3D12Debug> debugController;
+        ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)));
+        debugController->EnableDebugLayer();
+    }
+#endif
+
+    ID3D12Device* D3D12Device;
+    ThrowIfFailed(CreateDXGIFactory1(IID_PPV_ARGS(&m_DXGIFactory)));
+    ThrowIfFailed(D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&D3D12Device)));
+
+    m_RenderDevice = std::make_unique<RHI::RenderDevice>(D3D12Device);
 }
 
 void Engine::Tick()
