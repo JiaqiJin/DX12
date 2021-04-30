@@ -66,4 +66,10 @@
 // Dynamic Resource的Page大小，单位字节，1M
 #define DYNAMIC_RESOURCE_PAGE_SIZE 1048576
 
+#define NON_COPIABLE(ClassName) \
+	ClassName(const ClassName&) = delete; \
+	ClassName(ClassName&&) = delete; \
+	ClassName& operator = (const ClassName&) = delete; \
+	ClassName& operator = (ClassName&&) = delete;
+
 #endif //PCH_H
