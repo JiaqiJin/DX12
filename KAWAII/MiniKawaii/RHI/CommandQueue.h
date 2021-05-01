@@ -2,6 +2,9 @@
 
 namespace RHI
 {
+	/*
+	* Command Queue to submit the Command Lists to be excute by the GPU
+	*/
 	class CommandQueue 
 	{
 	public:
