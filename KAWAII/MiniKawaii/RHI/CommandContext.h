@@ -2,5 +2,9 @@
 
 namespace RHI
 {
-
+	class CommandContext
+	{
+	public:
+		
+	};
 }

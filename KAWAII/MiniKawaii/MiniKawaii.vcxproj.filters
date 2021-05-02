@@ -54,6 +54,18 @@
     <ClCompile Include="RHI\CommandAllocatorPool.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="RHI\CommandContext.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RHI\GpuResource.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RHI\DescriptorHeap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RHI\RootSignature.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common\d3dx12.h">
@@ -129,6 +141,18 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="RHI\CommandAllocatorPool.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\CommandContext.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\GpuResource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\DescriptorHeap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\RootSignature.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

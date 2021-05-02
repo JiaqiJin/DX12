@@ -27,3 +27,5 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
 };
 
 // CommandListManager
+// https://www.poe-vault.com/guides/cyclone-cast-on-critical-ice-nova-assassin-build-guide
+// https://www.3dgep.com/learning-directx-12-1/#GPU_Synchronization
