@@ -1,9 +1,9 @@
 ﻿#include "pch.h"
 
 #include "Engine.h"
-// http://diligentgraphics.com/diligent-engine/architecture/d3d12/
-using namespace DirectX;
 
+using namespace DirectX;
+// https://www.3dgep.com/learning-directx-12-1/
 _Use_decl_annotations_
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
 {
