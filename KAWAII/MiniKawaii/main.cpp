@@ -4,6 +4,7 @@
 
 using namespace DirectX;
 // https://www.3dgep.com/learning-directx-12-1/
+// https://microsoft.github.io/DirectX-Specs/d3d/ResourceBinding.html
 _Use_decl_annotations_
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
 {

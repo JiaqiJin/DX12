@@ -1,11 +1,12 @@
 #pragma once
-/*Descriptor are structure which tell shader where to find the resource, and how interprete data resource.
+/*Descriptor are structure(small block of memory) which tell shader where to find the resource, and how interprete data resource(GPU).
 * Descriptor heap are chunk of memory where Descriptor are stored. It could be Shader Visible(CBV, UAV, SRV, Sampler), 
 * Shader No Visible(RTV, DSV, ¿IBV, VBV and SOV?). GPU access == Shader Visible, CPU access == Non Shader Visible
 * There are four types of descriptor heaps in D3D12: 
 * Constant Buffer/Shader Resource/Unordered Access view, Sampler, Render Target View, Depth Stencil View
 */
-// http://diligentgraphics.com/diligent-engine/architecture/d3d12/
+// http://diligentgraphics.com/diligent-engine/architecture/d3d12/ 
+// https://www.codeproject.com/Articles/1180619/Managing-Descriptor-Heaps-in-Direct-D
 namespace RHI
 {
 	class RenderDevice;

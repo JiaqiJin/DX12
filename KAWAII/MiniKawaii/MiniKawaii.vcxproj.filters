@@ -66,6 +66,9 @@
     <ClCompile Include="RHI\RootSignature.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="RHI\VariableSizeAllocationsManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common\d3dx12.h">
@@ -153,6 +156,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="RHI\RootSignature.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\VariableSizeAllocationsManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
