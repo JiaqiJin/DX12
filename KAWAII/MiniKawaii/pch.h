@@ -58,6 +58,8 @@
 #include "Math/Common.h"
 #include "Math/VectorMath.h"
 
+#include "Common/Align.h"
+
 #define D3D12_GPU_VIRTUAL_ADDRESS_NULL      ((D3D12_GPU_VIRTUAL_ADDRESS)0)
 #define D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN   ((D3D12_GPU_VIRTUAL_ADDRESS)-1)
 

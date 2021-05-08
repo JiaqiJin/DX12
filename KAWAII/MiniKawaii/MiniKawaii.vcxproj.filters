@@ -161,6 +161,9 @@
     <ClInclude Include="RHI\VariableSizeAllocationsManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Common\Align.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Math\Functions.inl">
