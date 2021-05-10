@@ -1,7 +1,9 @@
-#pragma once
+ï»¿#pragma once
+#include "VariableSizeAllocationsManager.h"
+
 /*Descriptor are structure(small block of memory) which tell shader where to find the resource, and how interprete data resource(GPU).
 * Descriptor heap are chunk of memory where Descriptor are stored. It could be Shader Visible(CBV, UAV, SRV, Sampler), 
-* Shader No Visible(RTV, DSV, ¿IBV, VBV and SOV?). GPU access == Shader Visible, CPU access == Non Shader Visible
+* Shader No Visible(RTV, DSV, Â¿IBV, VBV and SOV?). GPU access == Shader Visible, CPU access == Non Shader Visible
 * There are four types of descriptor heaps in D3D12: 
 * Constant Buffer/Shader Resource/Unordered Access view, Sampler, Render Target View, Depth Stencil View
 */
@@ -38,7 +40,7 @@ namespace RHI
 			m_FirstGpuHandle.ptr = 0;
 		}
 
-		// Initializes non-null allocation 
+		// Initializes non-null allocationÂ 
 		DescriptorHeapAllocation(IDescriptorAllocator& allocator,
 			ID3D12DescriptorHeap* descriptorHeap,
 			D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle,
@@ -152,11 +154,86 @@ namespace RHI
 
 	/*
 	* Is the main workhorse class that manages allocations in D3D12 descriptor heap using variable-size GPU allocations manager
+	* In CPU-Only Descriptor Heap, a completer descriptor is managed
+	* In GPU-Only Descriptor Heap, because there is only 1 DH, only manages part of it
+	* Use VariableSizeAllocationsManager to manage free memory in heap
+	*  |  X  X  X  X  O  O  O  X  X  O  O  X  O  O  O  O  |  D3D12 descriptor heap
+    *
+    *  X - used descriptor
+    *  O - available descriptor
 	*/
 	class DescriptorHeapAllocationManager
 	{
 	public:
+		// Creates a new D3D12 descriptor heap
+		DescriptorHeapAllocationManager(RenderDevice& renderDevice,
+			IDescriptorAllocator& parentAllocator,
+			size_t                            thisManagerId,
+			const D3D12_DESCRIPTOR_HEAP_DESC& heapDesc);
 
+		// Uses subrange of descriptors in the existing D3D12 descriptor heap
+		// that starts at offset FirstDescriptor and uses NumDescriptors descriptors
+		DescriptorHeapAllocationManager(RenderDevice& renderDevice,
+			IDescriptorAllocator& parentAllocator,
+			size_t                thisManagerId,
+			Microsoft::WRL::ComPtr <ID3D12DescriptorHeap> descriptorHeap,
+			UINT32                firstDescriptor,
+			UINT32                numDescriptors);
+
+		DescriptorHeapAllocationManager(DescriptorHeapAllocationManager&& rhs) noexcept :
+			m_ParentAllocator{ rhs.m_ParentAllocator },
+			m_RenderDevice{ rhs.m_RenderDevice },
+			m_ThisManagerId{ rhs.m_ThisManagerId },
+			m_HeapDesc{ rhs.m_HeapDesc },
+			m_DescriptorIncrementSize{ rhs.m_DescriptorIncrementSize },
+			m_NumDescriptorsInAllocation{ rhs.m_NumDescriptorsInAllocation },
+			m_FirstCPUHandle{ rhs.m_FirstCPUHandle },
+			m_FirstGPUHandle{ rhs.m_FirstGPUHandle },
+			m_MaxAllocatedNum{ rhs.m_MaxAllocatedNum },
+			m_FreeBlockManager{ std::move(rhs.m_FreeBlockManager) },
+			m_DescriptorHeap{ std::move(rhs.m_DescriptorHeap) }
+		{
+			rhs.m_NumDescriptorsInAllocation = 0;
+			rhs.m_ThisManagerId = static_cast<size_t>(-1);
+			rhs.m_FirstCPUHandle.ptr = 0;
+			rhs.m_FirstGPUHandle.ptr = 0;
+			rhs.m_MaxAllocatedNum = 0;
+		}
+
+		DescriptorHeapAllocationManager& operator = (DescriptorHeapAllocationManager&&) = delete;
+		DescriptorHeapAllocationManager(const DescriptorHeapAllocationManager&) = delete;
+		DescriptorHeapAllocationManager& operator = (const DescriptorHeapAllocationManager&) = delete;
+
+		~DescriptorHeapAllocationManager();
+
+		DescriptorHeapAllocation Allocate(UINT32 count);
+		void FreeAllocation(DescriptorHeapAllocation&& allocation);
+
+		size_t GetNumAvailableDescriptors() { return m_FreeBlockManager.GetFreeSize(); }
+		UINT32 GetMaxDescriptors()         const { return m_NumDescriptorsInAllocation; }
+		size_t GetMaxAllocatedSize()       const { return m_MaxAllocatedNum; }
+
+	private:
+		IDescriptorAllocator& m_ParentAllocator;
+		RenderDevice& m_RenderDevice;
+
+		size_t m_ThisManagerId = static_cast<size_t>(-1);
+
+		const D3D12_DESCRIPTOR_HEAP_DESC m_HeapDesc;
+
+		const UINT m_DescriptorIncrementSize = 0;
+
+		// The total number of Descriptors that can be allocated
+		UINT32 m_NumDescriptorsInAllocation = 0;
+
+		VariableSizeAllocationsManager m_FreeBlockManager;
+
+		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_DescriptorHeap;
+
+		D3D12_CPU_DESCRIPTOR_HANDLE m_FirstCPUHandle = { 0 };
+		D3D12_GPU_DESCRIPTOR_HANDLE m_FirstGPUHandle = { 0 };
+
+		size_t m_MaxAllocatedNum = 0;
 	};
 
 	/*
