@@ -20,7 +20,7 @@ namespace RHI
 	public:
 		// Allocate count Descriptors
 		virtual DescriptorHeapAllocation Allocate(UINT32 count) = 0;
-		virtual void Free(DescriptorHeapAllocation& allocation) = 0;
+		virtual void Free(DescriptorHeapAllocation&& allocation) = 0;
 		virtual UINT32 GetDescriptorSize() const = 0;
 	};
 
@@ -238,15 +238,85 @@ namespace RHI
 
 	/*
 	* Implement CPU-only descriptor heap that is used as storage of resource view descriptor hanle
+	* Every CPU descriptor heap keeps a pool of Descriptor Heap Allocation Managers and a list of managers that have unused descriptors:
+	*        m_HeapPool[0]                m_HeapPool[1]                 m_HeapPool[2]
+    * |  X  X  X  X  X  X  X  X |, |  X  X  X  O  O  X  X  O  |, |  X  O  O  O  O  O  O  O  |
+	*  X - used descriptor                m_AvailableHeaps = {1,2}
+    *  O - available descriptor
+	* Render Device contains four CPUDescriptorHeap objects, corresponding to the four Descriptor Heaps of D3D12
+	* (SRV_CBV_UAV, Sampler, RTV, DSV).
 	*/
-	class CPUDescriptorHeap
+	class CPUDescriptorHeap final : public IDescriptorAllocator
 	{
 	public:
+		CPUDescriptorHeap(RenderDevice& renderDevice,
+			UINT32 numDescriptorsInHeap,
+			D3D12_DESCRIPTOR_HEAP_TYPE type,
+			D3D12_DESCRIPTOR_HEAP_FLAGS flags);
 
+		CPUDescriptorHeap(const CPUDescriptorHeap&) = delete;
+		CPUDescriptorHeap(CPUDescriptorHeap&&) = delete;
+		CPUDescriptorHeap& operator = (const CPUDescriptorHeap&) = delete;
+		CPUDescriptorHeap& operator = (CPUDescriptorHeap&&) = delete;
+
+		~CPUDescriptorHeap();
+
+		virtual DescriptorHeapAllocation Allocate(uint32_t count) override final;
+		virtual void Free(DescriptorHeapAllocation&& allocation) override final;
+		virtual UINT32 GetDescriptorSize() const override final { return m_DescriptorSize; }
+
+	private:
+		void FreeAllocation(DescriptorHeapAllocation&& allocation);
+
+		RenderDevice& m_RenderDevice;
+
+		std::vector<DescriptorHeapAllocationManager> m_HeapPool;
+		std::unordered_set<size_t, std::hash<size_t>, std::equal_to<size_t>> m_AvailableHeaps;
+
+		D3D12_DESCRIPTOR_HEAP_DESC m_HeapDesc;
+		const UINT                 m_DescriptorSize = 0;
+
+		UINT32 m_MaxSize = 0;
+		UINT32 m_CurrentSize = 0;
 	};
 
 	/*
 	* Implement shader-visible descriptor heap thta holds descriptor handles use by GPU commands.
+	* For GPU the must access a descriptor, they must reside in a shader visible descriptor heap(SRV_CBV_UAV and SAMPLER).
+	* " GPUDescriptorHeap object contains only single D3D12 descriptor heap ".
+	* The space is broken in 2 part : 1- keep rarely changing descriptor handle(corresponding to static and mutable variables),
+	* 2 - used to hold the dynamic descriptor handle(everal threads record commands simultaneously == problem bottleneck). 
+	* Fisrt stage : command contex allocates a chunck of descriptor from the shared dynamic part of GPU descriptor heap.
+	* Second stage : is suballoction from that chunk.
+	* 
+    *   static and mutable handles      ||                 dynamic space
+    *                                   ||    chunk 0     chunk 1     chunk 2     unused
+    *| X O O X X O X O O O O X X X X O  ||  | X X X O | | X X O O | | O O O O |  O O O O  ||
+    *                                             |         |
+    *                                   suballocation       suballocation
+    *                                  within chunk 0       within chunk 1
+	* Render Device contains two GPUDescriptorHeap objects (SRV_CBV_UAV and Sampler)
+	* 
+	* Device Context is used to allocate Dynamic Resource Descriptor
+	*   _______________________________________________________________________________________________________________________________
+    * | Render Device                                                                                                                 |
+    * |                                                                                                                               |
+    * | m_CPUDescriptorHeaps[CBV_SRV_UAV] |  X  X  X  X  X  X  X  X  |, |  X  X  X  X  X  X  X  X  |, |  X  O  O  X  O  O  O  O  |    |
+    * | m_CPUDescriptorHeaps[SAMPLER]     |  X  X  X  X  O  O  O  X  |, |  X  O  O  X  O  O  O  O  |                                  |
+    * | m_CPUDescriptorHeaps[RTV]         |  X  X  X  O  O  O  O  O  |, |  O  O  O  O  O  O  O  O  |                                  |
+    * | m_CPUDescriptorHeaps[DSV]         |  X  X  X  O  X  O  X  O  |                                                                |
+    * |                                                                               ctx1        ctx2                                |
+    * | m_GPUDescriptorHeaps[CBV_SRV_UAV]  | X O O X X O X O O O O X X X X O  ||  | X X X O | | X X O O | | O O O O |  O O O O  ||    |
+    * | m_GPUDescriptorHeaps[SAMPLER]      | X X O O X O X X X O O X O O O O  ||  | X X O O | | X O O O | | O O O O |  O O O O  ||    |
+    * |                                                                                                                               |
+    * |_______________________________________________________________________________________________________________________________|
+    *
+    *  ________________________________________________               ________________________________________________
+    * |Device Context 1                                |             |Device Context 2                                |
+    * |                                                |             |                                                |
+    * | m_DynamicGPUDescriptorAllocator[CBV_SRV_UAV]   |             | m_DynamicGPUDescriptorAllocator[CBV_SRV_UAV]   |
+    * | m_DynamicGPUDescriptorAllocator[SAMPLER]       |             | m_DynamicGPUDescriptorAllocator[SAMPLER]       |
+    * |________________________________________________|             |________________________________________________|
 	*/
 	class GPUDescriptorHeap
 	{

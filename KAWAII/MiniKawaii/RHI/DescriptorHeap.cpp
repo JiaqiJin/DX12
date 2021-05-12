@@ -1,4 +1,4 @@
-#include "../pch.h"
+﻿#include "../pch.h"
 #include "DescriptorHeap.h"
 #include "RenderDevice.h"
 
@@ -91,5 +91,126 @@ namespace RHI
 		m_FreeBlockManager.Free(descriptorOffset, allocation.GetNumHandles());
 
 		allocation.Reset();
+	}
+
+	// CPU descriptor heap
+	CPUDescriptorHeap::CPUDescriptorHeap(RenderDevice& renderDevice,
+		UINT32 numDescriptorsInHeap,
+		D3D12_DESCRIPTOR_HEAP_TYPE type,
+		D3D12_DESCRIPTOR_HEAP_FLAGS flags) :
+		m_RenderDevice{ renderDevice },
+		m_HeapDesc
+	{
+		type,
+		numDescriptorsInHeap,
+		flags,
+		1	// NodeMask
+	},
+		m_DescriptorSize{ renderDevice.GetD3D12Device()->GetDescriptorHandleIncrementSize(type) }
+	{
+		m_HeapPool.emplace_back(renderDevice, *this, 0, m_HeapDesc);
+		m_AvailableHeaps.insert(0);
+	}
+
+	CPUDescriptorHeap::~CPUDescriptorHeap()
+	{
+		assert((m_CurrentSize == 0) && "Not all allocations released");
+		assert((m_AvailableHeaps.size() == m_HeapPool.size()) && "Not all descriptor heap pools are released");
+	}
+
+	DescriptorHeapAllocation CPUDescriptorHeap::Allocate(uint32_t count)
+	{
+		
+		DescriptorHeapAllocation Allocation;
+		auto availableHeapIt = m_AvailableHeaps.begin();
+		// Go through all descriptor heap managers that have free descriptors
+		while (availableHeapIt != m_AvailableHeaps.end())
+		{
+			// For vector and deque, erase may cause iterator and reference pointing to other elements to become invalid,
+			// but for all other containers, iterator and reference pointing to other elements will always remain valid
+			auto nextIt = availableHeapIt;
+			++nextIt;
+
+			// Try to use the current Manager to allocate Descriptor
+			Allocation = m_HeapPool[*availableHeapIt].Allocate(count);
+
+			// Remove the manager from the pool if it has no more available descriptors
+			if (m_HeapPool[*availableHeapIt].GetNumAvailableDescriptors() == 0)
+				m_AvailableHeaps.erase(*availableHeapIt);
+
+			// Terminate the loop if descriptor was successfully allocated, otherwise
+			// go to the next manager
+			if (!Allocation.IsNull())
+				break;
+
+			availableHeapIt = nextIt;
+		}
+
+		// If there were no available descriptor heap managers or no manager was able 
+		// to suffice the allocation request, create a new manager
+		if (Allocation.IsNull())
+		{
+			if (count > m_HeapDesc.NumDescriptors)
+			{
+				LOG("Increasing the number of descriptors in the heap");
+			}
+			// Make sure the heap is large enough to accomodate the requested number of descriptors
+			m_HeapDesc.NumDescriptors = std::max(m_HeapDesc.NumDescriptors, static_cast<UINT>(count));
+			// Create a new descriptor heap manager. Note that this constructor creates a new D3D12 descriptor
+			// heap and references the entire heap. Pool index is used as manager ID
+			m_HeapPool.emplace_back(m_RenderDevice, *this, m_HeapPool.size(), m_HeapDesc);
+			m_AvailableHeaps.insert(m_HeapPool.size() - 1);
+
+			// Use the new manager to allocate descriptor handles
+			Allocation = m_HeapPool[m_HeapPool.size() - 1].Allocate(count);
+		}
+	
+		m_CurrentSize += static_cast<UINT32>(Allocation.GetNumHandles());
+		m_MaxSize = std::max(m_MaxSize, m_CurrentSize);
+
+		return Allocation;
+	}
+
+	void CPUDescriptorHeap::Free(DescriptorHeapAllocation&& allocation)
+	{
+		struct StaleAllocation
+		{
+			DescriptorHeapAllocation Allocation;
+			CPUDescriptorHeap* Heap;
+
+			StaleAllocation(DescriptorHeapAllocation&& _Allocation, CPUDescriptorHeap& _Heap)noexcept :
+				Allocation{ std::move(_Allocation) },
+				Heap{ &_Heap }
+			{
+			}
+
+			StaleAllocation(const StaleAllocation&) = delete;
+			StaleAllocation& operator= (const StaleAllocation&) = delete;
+			StaleAllocation& operator= (StaleAllocation&&) = delete;
+
+			StaleAllocation(StaleAllocation&& rhs)noexcept :
+				Allocation{ std::move(rhs.Allocation) },
+				Heap{ rhs.Heap }
+			{
+				rhs.Heap = nullptr;
+			}
+
+			~StaleAllocation()
+			{
+				if (Heap != nullptr)
+					Heap->FreeAllocation(std::move(Allocation));
+			}
+		};
+
+		m_RenderDevice.SafeReleaseDeviceObject(StaleAllocation{ std::move(allocation), *this });
+	}
+
+	void CPUDescriptorHeap::FreeAllocation(DescriptorHeapAllocation&& allocation)
+	{
+		auto managerID = allocation.GetAllocationManagerId();
+		m_CurrentSize -= static_cast<UINT32>(allocation.GetNumHandles());
+		m_HeapPool[managerID].FreeAllocation(std::move(allocation));
+		
+		m_AvailableHeaps.insert(managerID);
 	}
 }
