@@ -318,18 +318,103 @@ namespace RHI
     * | m_DynamicGPUDescriptorAllocator[SAMPLER]       |             | m_DynamicGPUDescriptorAllocator[SAMPLER]       |
     * |________________________________________________|             |________________________________________________|
 	*/
-	class GPUDescriptorHeap
+	class GPUDescriptorHeap final : public IDescriptorAllocator
 	{
+		friend class DynamicSuballocationsManager;
 	public:
+		GPUDescriptorHeap(RenderDevice& renderDevice,
+			UINT32 numDescriptorsInHeap,
+			UINT32 numDynamicDescriptors,
+			D3D12_DESCRIPTOR_HEAP_TYPE type,
+			D3D12_DESCRIPTOR_HEAP_FLAGS flags);
 
+		GPUDescriptorHeap(const GPUDescriptorHeap&) = delete;
+		GPUDescriptorHeap(GPUDescriptorHeap&&) = delete;
+		GPUDescriptorHeap& operator = (const GPUDescriptorHeap&) = delete;
+		GPUDescriptorHeap& operator = (GPUDescriptorHeap&&) = delete;
+
+		~GPUDescriptorHeap();
+
+		virtual DescriptorHeapAllocation Allocate(UINT32 count) override final
+		{
+			return m_HeapAllocationManager.Allocate(count);
+		}
+		virtual void   Free(DescriptorHeapAllocation&& allocation) override final;
+		virtual UINT32 GetDescriptorSize() const override final { return m_DescriptorSize; }
+
+		const D3D12_DESCRIPTOR_HEAP_DESC& GetHeapDesc() const { return m_HeapDesc; }
+		UINT32 GetMaxStaticDescriptors() const { return m_HeapAllocationManager.GetMaxDescriptors(); }
+		UINT32 GetMaxDynamicDescriptors() const { return m_DynamicAllocationsManager.GetMaxDescriptors(); }
+
+		ID3D12DescriptorHeap* GetD3D12DescriptorHeap() { return m_DescriptorHeap.Get(); }
+	private:
+		DescriptorHeapAllocation AllocateDynamic(UINT32 count)
+		{
+			return m_DynamicAllocationsManager.Allocate(count);
+		}
+
+		RenderDevice& m_RenderDevice;
+		const D3D12_DESCRIPTOR_HEAP_DESC m_HeapDesc;
+		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_DescriptorHeap;
+		const UINT m_DescriptorSize;
+
+		// static/mutable manager
+		DescriptorHeapAllocationManager m_HeapAllocationManager;
+		// Dynamic manager
+		DescriptorHeapAllocationManager m_DynamicAllocationsManager;
 	};
 
 	/*
 	* Responsible to allocate short living dynamic descriptor handle use in the current frame only
+	* Maintains a list of chunks allocated from the main GPU descriptor heap as well as the offset within the current chunk
+	* Because the request Chunk needs to be locked, but the sub-allocation in the Chunk is not required,
+	* so that each thread can allocate dynamic Descriptors in parallel. At the end of each frame, all allocations will be discarded
 	*/
-	class DynamicSuballocationsManager
+	class DynamicSuballocationsManager final : public IDescriptorAllocator
 	{
 	public:
+		DynamicSuballocationsManager(GPUDescriptorHeap& parentGPUHeap, UINT32 dynamicChunkSize, std::string managerName);
 
+		DynamicSuballocationsManager(const DynamicSuballocationsManager&) = delete;
+		DynamicSuballocationsManager(DynamicSuballocationsManager&&) = delete;
+		DynamicSuballocationsManager& operator = (const DynamicSuballocationsManager&) = delete;
+		DynamicSuballocationsManager& operator = (DynamicSuballocationsManager&&) = delete;
+
+		~DynamicSuballocationsManager();
+
+		void ReleaseAllocations();
+
+		virtual DescriptorHeapAllocation Allocate(UINT32 count) override final;
+		virtual void Free(DescriptorHeapAllocation&& Allocation) override final
+		{
+			// Dynamic allocation is not released separately, 
+			// it releases the entire Chunk through ReleaseAllocations() at the end of each frame
+			Allocation.Reset();
+		}
+
+		virtual UINT32 GetDescriptorSize() const override final { return m_ParentGPUHeap.GetDescriptorSize(); }
+
+		size_t GetSuballocationCount() const { return m_Chunks.size(); }
+	private:
+		GPUDescriptorHeap& m_ParentGPUHeap;
+		const std::string m_ManagerName;
+
+		// Assigned chunk
+		std::vector<DescriptorHeapAllocation> m_Chunks;
+
+		// last chunck offset, After the Offset is the Descriptor that has not yet been allocated
+		UINT32 m_CurrentOffsetInChunk = 0;
+		
+		// Initialize each chunk size
+		UINT32 m_DynamicChunkSize = 0;
+
+		// The number of all Descriptors currently allocated
+		UINT32 m_CurrDescriptorCount = 0;
+		// Current chunkc size
+		UINT32 m_CurrChunkSize = 0;
+		// Peak number of Descriptors allocated in Chunk
+		UINT32 m_PeakDescriptorCount = 0;
+		// The peak size of the allocated Chunk
+		UINT32 m_PeakSuballocationsTotalSize = 0;
 	};
 }
