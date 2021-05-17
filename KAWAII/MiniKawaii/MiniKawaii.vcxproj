@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClInclude Include="Common\d3dx12.h" />
     <ClInclude Include="Common\Align.h" />
+    <ClInclude Include="Core\RingBuffer.h" />
     <ClInclude Include="Math\Common.h" />
     <ClInclude Include="Math\Matrix3.h" />
     <ClInclude Include="Math\Matrix4.h" />
@@ -35,6 +36,7 @@
     <ClInclude Include="RHI\CommandListManager.h" />
     <ClInclude Include="RHI\CommandQueue.h" />
     <ClInclude Include="RHI\DescriptorHeap.h" />
+    <ClInclude Include="RHI\DynamicResource.h" />
     <ClInclude Include="RHI\GpuResource.h" />
     <ClInclude Include="RHI\PipelineState.h" />
     <ClInclude Include="RHI\RenderDevice.h" />
@@ -52,6 +54,7 @@
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Core\RingBuffer.cpp" />
     <ClCompile Include="Engine.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Math\Random.cpp" />
@@ -61,6 +64,7 @@
     <ClCompile Include="RHI\CommandListManager.cpp" />
     <ClCompile Include="RHI\CommandQueue.cpp" />
     <ClCompile Include="RHI\DescriptorHeap.cpp" />
+    <ClCompile Include="RHI\DynamicResource.cpp" />
     <ClCompile Include="RHI\GpuResource.cpp" />
     <ClCompile Include="RHI\PipelineState.cpp" />
     <ClCompile Include="RHI\RenderDevice.cpp" />

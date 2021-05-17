@@ -69,6 +69,12 @@
     <ClCompile Include="RHI\VariableSizeAllocationsManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="RHI\DynamicResource.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\RingBuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common\d3dx12.h">
@@ -162,6 +168,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Common\Align.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\DynamicResource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\RingBuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
