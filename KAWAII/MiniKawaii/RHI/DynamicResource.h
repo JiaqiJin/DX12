@@ -93,4 +93,47 @@ namespace RHI
 	private:
 		std::multimap<UINT64/*Page size*/, D3D12DynamicPage, std::less<UINT64>> m_AvailablePages;
 	};
+
+	class DynamicResourceHeap
+	{
+	public:
+		DynamicResourceHeap(DynamicResourceAllocator& DynamicMemAllocator, UINT64 PageSize) :
+			m_GlobalDynamicAllocator{ DynamicMemAllocator },
+			m_BasePageSize{ PageSize }
+		{
+		}
+
+		DynamicResourceHeap(const DynamicResourceHeap&) = delete;
+		DynamicResourceHeap(DynamicResourceHeap&&) = delete;
+		DynamicResourceHeap& operator= (const DynamicResourceHeap&) = delete;
+		DynamicResourceHeap& operator= (DynamicResourceHeap&&) = delete;
+
+		~DynamicResourceHeap();
+
+		D3D12DynamicAllocation Allocate(UINT64 SizeInBytes, UINT64 Alignment);
+		// Add the allocated Page to the release queue at the end of each frame
+		void ReleaseAllocatedPages();
+
+		static constexpr UINT64 InvalidOffset = static_cast<UINT64>(-1);
+
+	private:
+		DynamicResourceAllocator& m_GlobalDynamicAllocator;
+
+		std::vector<D3D12DynamicPage> m_AllocatedPages;
+
+		const UINT64 m_BasePageSize;
+		// Offset Allocated in the current page
+		UINT64 m_CurrOffset = InvalidOffset;
+		// The remaining capacity of the current page
+		UINT64 m_AvailableSize = 0;
+		// Allocated size
+		UINT64 m_CurrAllocatedSize = 0;
+		// Used size
+		UINT64 m_CurrUsedSize = 0;
+		// Aligned size
+		UINT64 m_CurrUsedAlignedSize = 0;
+		UINT64 m_PeakAllocatedSize = 0;
+		UINT64 m_PeakUsedSize = 0;
+		UINT64 m_PeakAlignedSize = 0;
+	};
 }
