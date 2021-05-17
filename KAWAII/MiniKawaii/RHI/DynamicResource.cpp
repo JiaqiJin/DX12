@@ -127,7 +127,7 @@ namespace RHI
         if (m_CurrOffset == InvalidOffset || SizeInBytes + (Align(m_CurrOffset, Alignment) - m_CurrOffset) > m_AvailableSize)
         {
             auto NewPageSize = m_BasePageSize;
-            // // Calculate the Page size that can satisfy this allocation
+            // Calculate the Page size that can satisfy this allocation
             while (NewPageSize < SizeInBytes)
                 NewPageSize *= 2;
 
