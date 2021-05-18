@@ -37,7 +37,9 @@
     <ClInclude Include="RHI\CommandQueue.h" />
     <ClInclude Include="RHI\DescriptorHeap.h" />
     <ClInclude Include="RHI\DynamicResource.h" />
+    <ClInclude Include="RHI\GpuBuffer.h" />
     <ClInclude Include="RHI\GpuResource.h" />
+    <ClInclude Include="RHI\GpuResourceDescriptor.h" />
     <ClInclude Include="RHI\PipelineState.h" />
     <ClInclude Include="RHI\RenderDevice.h" />
     <ClInclude Include="RHI\RootSignature.h" />
@@ -65,7 +67,9 @@
     <ClCompile Include="RHI\CommandQueue.cpp" />
     <ClCompile Include="RHI\DescriptorHeap.cpp" />
     <ClCompile Include="RHI\DynamicResource.cpp" />
+    <ClCompile Include="RHI\GpuBuffer.cpp" />
     <ClCompile Include="RHI\GpuResource.cpp" />
+    <ClCompile Include="RHI\GpuResourceDescriptor.cpp" />
     <ClCompile Include="RHI\PipelineState.cpp" />
     <ClCompile Include="RHI\RenderDevice.cpp" />
     <ClCompile Include="RHI\RootSignature.cpp" />

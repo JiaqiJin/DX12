@@ -9,6 +9,7 @@
 * GpuResource inherits enable_shared_from_this, because GpuResourceDescriptor will be created internally,
 * and GpuResourceDescriptor will have the ownership of GpuResource,
 * To ensure that GpuResource will not be released when using GpuResourceDescriptor
+* https://docs.microsoft.com/en-us/windows/win32/direct3d12/resource-binding-flow-of-control
 */
 namespace RHI
 {
@@ -17,6 +18,8 @@ namespace RHI
 	class GpuResource : public std::enable_shared_from_this<GpuResource>
 	{
 		friend class CommandContext;
+		friend class GraphicsContext;
+		friend class ComputeContext;
 
 	public:
 		virtual ~GpuResource();
