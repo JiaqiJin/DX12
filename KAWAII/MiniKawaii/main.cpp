@@ -32,4 +32,4 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
 // https://www.3dgep.com/learning-directx-12-1/#GPU_Synchronization
 // https://milty.nl/grad_guide/basic_implementation/d3d12/command_list.html
 
-// GPUBUFFER
+// GPUBUFFER command context

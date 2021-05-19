@@ -51,7 +51,17 @@ namespace RHI
 	public:
 		~CommandContext();
 
+		// Start recording commands
+		static CommandContext& Begin(const std::wstring ID = L"");
+
+		static void InitializeBuffer(GpuBuffer& dest, const void* data, size_t numBytes, size_t destOffset = 0);
+		static void InitializeBuffer(GpuBuffer& dest, const GpuUploadBuffer Src, size_t srcOffset, size_t numBytes = -1, size_t destOffset = 0);
+
+		// Allocate memory from Dynamic Resource
+		D3D12DynamicAllocation AllocateDynamicSpace(size_t numByte, size_t alignment);
+
 	protected:
+		void SetID(const std::wstring& ID) { m_ID = ID; }
 		// Command list type
 		D3D12_COMMAND_LIST_TYPE m_type;
 		// Command List (Command list is held by Command Contex, Command Allocator is manage by object pool)

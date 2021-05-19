@@ -15,6 +15,12 @@ namespace RHI
 		m_heapType = heapType;
 	}
 
+	D3D12_VERTEX_BUFFER_VIEW GpuBuffer::CreateVBV(size_t baseVertexIndex /*= 0*/) const
+	{
+		size_t Offset = baseVertexIndex * m_elementSize;
+		return CreateVBV(Offset, (uint32_t)(m_bufferSize - Offset), m_elementSize);
+	}
+
 	D3D12_VERTEX_BUFFER_VIEW GpuBuffer::CreateVBV(size_t Offset, uint32_t size, uint32_t stride) const
 	{
 		D3D12_VERTEX_BUFFER_VIEW VBView;
@@ -24,10 +30,10 @@ namespace RHI
 		return VBView;
 	}
 
-	D3D12_VERTEX_BUFFER_VIEW GpuBuffer::CreateVBV(size_t baseVertexIndex /*= 0*/) const
+	D3D12_INDEX_BUFFER_VIEW GpuBuffer::CreateIBV(size_t startIndex /*= 0*/) const
 	{
-		size_t Offset = baseVertexIndex * m_elementSize;
-		return CreateVBV(Offset, (uint32_t)(m_bufferSize - Offset), m_elementSize);
+		size_t offset = startIndex * m_elementSize;
+		return CreateIBV(offset, (uint32_t)(m_bufferSize - offset), m_elementSize == 4);
 	}
 
 	D3D12_INDEX_BUFFER_VIEW GpuBuffer::CreateIBV(size_t offset, uint32_t size, bool b32Bit) const
@@ -37,12 +43,6 @@ namespace RHI
 		IBView.Format = b32Bit ? DXGI_FORMAT_R32_UINT : DXGI_FORMAT_R16_UINT;
 		IBView.SizeInBytes = size;
 		return IBView;
-	}
-
-	D3D12_INDEX_BUFFER_VIEW GpuBuffer::CreateIBV(size_t startIndex /*= 0*/) const
-	{
-		size_t offset = startIndex * m_elementSize;
-		return CreateIBV(offset, (uint32_t)(m_bufferSize - offset), m_elementSize == 4);
 	}
 
 	std::shared_ptr<GpuResourceDescriptor> GpuBuffer::CreateSRV()
@@ -65,7 +65,7 @@ namespace RHI
 	std::shared_ptr<GpuResourceDescriptor> GpuBuffer::CreateUAV()
 	{
 		std::shared_ptr<GpuResourceDescriptor> descriptor = std::make_shared<GpuResourceDescriptor>(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, shared_from_this());
-		// TODO
+		// TODO UAV need Counter Buffer
 		return descriptor;
 	}
 
@@ -85,8 +85,8 @@ namespace RHI
 
 		m_GpuVirtualAddress = m_pResource->GetGPUVirtualAddress();
 
-		//if(initialData)
-			// todo
+		if(initialData)
+			CommandContext::InitializeBuffer(*this, initialData, m_bufferSize);
 	}
 
 	void GpuBuffer::CreateBufferResource(const GpuUploadBuffer& srcData, UINT32 srcOffset)
@@ -105,7 +105,7 @@ namespace RHI
 
 		m_GpuVirtualAddress = m_pResource->GetGPUVirtualAddress();
 
-		// todo
+		CommandContext::InitializeBuffer(*this, srcData, srcOffset);
 	}
 
 	D3D12_RESOURCE_DESC GpuBuffer::DescribeBuffer()
@@ -126,5 +126,18 @@ namespace RHI
 		Desc.Width = (UINT64)m_bufferSize;
 
 		return Desc;
+	}
+
+	D3D12_GPU_VIRTUAL_ADDRESS GpuDynamicBuffer::GetGpuVirtualAddress() const
+	{
+		return m_DynamicData.GPUAddress;
+	}
+
+	// During the mapping, memory will allocated in a dynamic resource heap. UnMap is not needed
+	// Constant Buffer is 256-byte aligned, the other 16-byte aligned
+	void* GpuDynamicBuffer::Map(CommandContext& cmdContext, size_t alignment)
+	{
+		m_DynamicData = cmdContext.AllocateDynamicSpace(m_bufferSize, alignment);
+		return m_DynamicData.CPUAddress;
 	}
 }

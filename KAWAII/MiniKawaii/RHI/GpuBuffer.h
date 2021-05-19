@@ -48,4 +48,60 @@ namespace RHI
 		UINT32 m_elementSize;
 		UINT64 m_bufferSize;
 	};
+
+	class GpuDefaultBuffer : public GpuBuffer
+	{
+	public:
+		GpuDefaultBuffer(UINT32 numElements, UINT32 elementSize, const void* initialData)
+			: GpuBuffer(numElements, elementSize, D3D12_RESOURCE_STATE_COMMON, D3D12_HEAP_TYPE_DEFAULT)
+		{
+			CreateBufferResource(initialData);
+		}
+		
+		GpuDefaultBuffer(UINT32 numElements, UINT32 elementSize, const GpuUploadBuffer& srcData, UINT32 srcOffset)
+			: GpuBuffer(numElements, elementSize, D3D12_RESOURCE_STATE_COMMON, D3D12_HEAP_TYPE_DEFAULT)
+		{
+			CreateBufferResource(srcData, srcOffset);
+		}
+	};
+
+	class GpuUploadBuffer : public GpuBuffer
+	{
+	public:
+		GpuUploadBuffer(UINT32 numElements, UINT32 elementSize)
+			: GpuBuffer(numElements, elementSize, D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_HEAP_TYPE_UPLOAD)
+		{
+			CreateBufferResource(nullptr);
+		}
+
+		void* Map()
+		{
+			void* memory;
+			m_pResource->Map(0, &CD3DX12_RANGE(0, m_bufferSize), &memory);
+			return memory;
+		}
+
+		void Unmap(size_t begin = 0, size_t end = -1)
+		{
+			m_pResource->Unmap(0, &CD3DX12_RANGE(begin, std::min(end, m_bufferSize)));
+		}
+	};
+
+	class GpuDynamicBuffer : public GpuBuffer
+	{
+	public:
+		GpuDynamicBuffer(UINT32 numElements, UINT32 elementSize)
+			: GpuBuffer(numElements, elementSize, D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_HEAP_TYPE_UPLOAD)
+		{
+
+		}
+
+		virtual D3D12_GPU_VIRTUAL_ADDRESS GetGpuVirtualAddress() const override;
+
+		void* Map(CommandContext& cmdContext, size_t alignment);
+
+	protected:
+		// No need to release, released by DynamicResourceHeap in every frame
+		D3D12DynamicAllocation m_DynamicData;
+	};
 }

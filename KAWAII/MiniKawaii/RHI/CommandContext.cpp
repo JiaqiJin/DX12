@@ -36,6 +36,7 @@ namespace RHI
 		m_AvailableContexts[usedContext->m_type].push(usedContext);
 	}
 
+	// ------------------- Command Context ---------------------
 	CommandContext::CommandContext(D3D12_COMMAND_LIST_TYPE type)
 		: m_type(type),
 		m_CommandList(nullptr),
@@ -67,5 +68,42 @@ namespace RHI
 
 		// TODO
 
+	}
+
+	CommandContext& CommandContext::Begin(const std::wstring ID /*= L""*/)
+	{
+		CommandContext* NewContext = ContextManager::GetSingleton().AllocateContext(D3D12_COMMAND_LIST_TYPE_DIRECT);
+		NewContext->SetID(ID);
+
+		return *NewContext;
+	}
+
+	void CommandContext::InitializeBuffer(GpuBuffer& Dest, const void* data, size_t numBytes, size_t destOffset /*= 0*/)
+	{
+		CommandContext& initContext = CommandContext::Begin();
+
+		// Copy to UploadBuffer, the UploadBuffer here will be automatically released, and SafeRelease will be called in the destructor
+		GpuUploadBuffer uploadBuffer(1, numBytes);
+		void* dataPtr = uploadBuffer.Map();
+		memcpy(dataPtr, data, numBytes);
+
+		// Resource Transition
+		//TODO
+	}
+
+	void CommandContext::InitializeBuffer(GpuBuffer& dest, const GpuUploadBuffer src, size_t srcOffset, size_t numBytes, size_t destOffset)
+	{
+		CommandContext& initContext = CommandContext::Begin();
+
+		size_t maxBytes = std::min<size_t>(dest.GetBufferSize() - destOffset, src.GetBufferSize() - srcOffset);
+		numBytes = std::min<size_t>(numBytes, maxBytes);
+
+		// Resource Transition
+		//TODO
+	}
+
+	D3D12DynamicAllocation CommandContext::AllocateDynamicSpace(size_t numByte, size_t alignment)
+	{
+		return m_DynamicResourceHeap.Allocate(numByte, alignment);
 	}
 }
