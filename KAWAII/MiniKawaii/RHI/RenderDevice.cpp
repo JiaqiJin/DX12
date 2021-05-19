@@ -38,4 +38,10 @@ namespace RHI
 		assert(Type >= D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV && Type <= D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER && "Invalid heap type");
 		return m_GPUDescriptorHeaps[Type].Allocate(Count);
 	}
+
+	GPUDescriptorHeap& RenderDevice::GetGPUDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type)
+	{
+		assert(type == D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV || type == D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+		return m_GPUDescriptorHeaps[type];
+	}
 }

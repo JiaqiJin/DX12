@@ -22,6 +22,10 @@ namespace RHI
 		// Getters
 		ID3D12Device* GetD3D12Device() { return m_device.Get(); }
 
+		GPUDescriptorHeap& GetGPUDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type);
+
+		DynamicResourceAllocator& GetDynamicResourceAllocator() { return m_DynamicResAllocator; }
+
 	private:
 		Microsoft::WRL::ComPtr<ID3D12Device> m_device;
 		// Four descriptor heap object, corresponding to the 4 descriptor heap type
