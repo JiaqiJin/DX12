@@ -56,6 +56,7 @@ namespace RHI
 
 		static void InitializeBuffer(GpuBuffer& dest, const void* data, size_t numBytes, size_t destOffset = 0);
 		static void InitializeBuffer(GpuBuffer& dest, const GpuUploadBuffer Src, size_t srcOffset, size_t numBytes = -1, size_t destOffset = 0);
+		static void InitializeTexture(GpuResource& dest, UINT NumSubresources, D3D12_SUBRESOURCE_DATA subData[]);
 
 		// Allocate memory from Dynamic Resource
 		D3D12DynamicAllocation AllocateDynamicSpace(size_t numByte, size_t alignment);

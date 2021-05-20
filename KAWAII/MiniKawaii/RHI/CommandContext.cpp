@@ -102,6 +102,13 @@ namespace RHI
 		//TODO
 	}
 
+	void CommandContext::InitializeTexture(GpuResource& dest, UINT NumSubresources, D3D12_SUBRESOURCE_DATA subData[])
+	{
+		CommandContext& initContext = CommandContext::Begin();
+
+		//TODO
+	}
+
 	D3D12DynamicAllocation CommandContext::AllocateDynamicSpace(size_t numByte, size_t alignment)
 	{
 		return m_DynamicResourceHeap.Allocate(numByte, alignment);
