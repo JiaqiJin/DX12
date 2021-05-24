@@ -44,4 +44,9 @@ namespace RHI
 		assert(type == D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV || type == D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
 		return m_GPUDescriptorHeaps[type];
 	}
+
+	void RenderDevice::PurgeReleaseQueue(bool forceRelease)
+	{
+		// TODO
+	}
 }

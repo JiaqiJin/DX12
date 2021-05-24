@@ -12,6 +12,13 @@ namespace RHI
 {
 	class CommandContext;
 
+	// Compute Command List only supports the transition of these states
+#define VALID_COMPUTE_QUEUE_RESOURCE_STATES \
+	    ( D3D12_RESOURCE_STATE_UNORDERED_ACCESS \
+	    | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE \
+		| D3D12_RESOURCE_STATE_COPY_DEST \
+		| D3D12_RESOURCE_STATE_COPY_SOURCE )
+
 	class ContextManager : public Singleton<ContextManager>
 	{
 	public:
@@ -53,6 +60,10 @@ namespace RHI
 
 		// Start recording commands
 		static CommandContext& Begin(const std::wstring ID = L"");
+		// Flush existing commands to the GPU but keep the context alive
+		uint64_t Flush(bool WaitForCompletion = false);
+		// Finish the command record
+		uint64_t Finish(bool waitForCompletion = false, bool releaseDynamic = false);
 
 		static void InitializeBuffer(GpuBuffer& dest, const void* data, size_t numBytes, size_t destOffset = 0);
 		static void InitializeBuffer(GpuBuffer& dest, const GpuUploadBuffer Src, size_t srcOffset, size_t numBytes = -1, size_t destOffset = 0);
@@ -60,6 +71,9 @@ namespace RHI
 
 		// Allocate memory from Dynamic Resource
 		D3D12DynamicAllocation AllocateDynamicSpace(size_t numByte, size_t alignment);
+
+		void TransitionResource(GpuResource& resource, D3D12_RESOURCE_STATES newState, bool FlushImmediate = true);
+		void FlushResourceBarriers(void);
 
 	protected:
 		void SetID(const std::wstring& ID) { m_ID = ID; }

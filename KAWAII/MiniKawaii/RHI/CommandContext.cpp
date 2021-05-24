@@ -67,7 +67,7 @@ namespace RHI
 		m_CommandList->Reset(m_CurrentAllocator, nullptr);
 
 		// TODO
-
+		
 	}
 
 	CommandContext& CommandContext::Begin(const std::wstring ID /*= L""*/)
@@ -76,6 +76,56 @@ namespace RHI
 		NewContext->SetID(ID);
 
 		return *NewContext;
+	}
+
+	uint64_t CommandContext::Flush(bool waitForCompletion /*= false*/)
+	{
+		FlushResourceBarriers();
+
+		assert(m_CurrentAllocator != nullptr);
+
+		uint64_t fenceValue = CommandListManager::GetSingleton().GetQueue(m_type).ExecuteCommandList(m_CommandList.Get());
+
+		if (waitForCompletion)
+			CommandListManager::GetSingleton().WaitForFence(fenceValue, m_type);
+		
+		m_CommandList->Reset(m_CurrentAllocator, nullptr);
+
+		// TODO: After CommandList Reset, reset the rendering state
+
+		return fenceValue;
+	}
+
+	uint64_t CommandContext::Finish(bool waitForCompletion /*= false*/, bool releaseDynamic /*= false*/)
+	{
+		assert(m_type == D3D12_COMMAND_LIST_TYPE_DIRECT || m_type == D3D12_COMMAND_LIST_TYPE_COMPUTE);
+
+		FlushResourceBarriers();
+
+		assert(m_CurrentAllocator != nullptr);
+
+		CommandQueue& commandQueue = CommandListManager::GetSingleton().GetQueue(m_type);
+
+		// Clean Release Queue
+		RenderDevice::GetSingleton().PurgeReleaseQueue(false);
+
+		// Release dynamic resources at the end of each frame
+		if (releaseDynamic)
+		{
+			m_DynamicGPUDescriptorAllocator.ReleaseAllocations();
+			m_DynamicResourceHeap.ReleaseAllocatedPages();
+		}
+
+		uint64_t fenceValue = commandQueue.ExecuteCommandList(m_CommandList.Get());
+		commandQueue.DiscardAllocator(fenceValue, m_CurrentAllocator);
+		m_CurrentAllocator = nullptr;
+
+		if (waitForCompletion)
+			CommandListManager::GetSingleton().WaitForFence(fenceValue, m_type);
+
+		ContextManager::GetSingleton().FreeContext(this);
+
+		return fenceValue;
 	}
 
 	void CommandContext::InitializeBuffer(GpuBuffer& Dest, const void* data, size_t numBytes, size_t destOffset /*= 0*/)
@@ -88,7 +138,12 @@ namespace RHI
 		memcpy(dataPtr, data, numBytes);
 
 		// Resource Transition
-		//TODO
+		initContext.TransitionResource(Dest, D3D12_RESOURCE_STATE_COPY_DEST, true);
+		initContext.m_CommandList->CopyBufferRegion(Dest.GetResource(), destOffset, uploadBuffer.GetResource(), 0, numBytes);
+		initContext.TransitionResource(Dest, D3D12_RESOURCE_STATE_GENERIC_READ, true);
+
+		// Execute the command list and wait for it to finish so we can release the upload buffer
+		initContext.Finish(true);
 	}
 
 	void CommandContext::InitializeBuffer(GpuBuffer& dest, const GpuUploadBuffer src, size_t srcOffset, size_t numBytes, size_t destOffset)
@@ -99,18 +154,76 @@ namespace RHI
 		numBytes = std::min<size_t>(numBytes, maxBytes);
 
 		// Resource Transition
-		//TODO
+		initContext.TransitionResource(dest, D3D12_RESOURCE_STATE_COPY_DEST, true);
+		initContext.m_CommandList->CopyBufferRegion(dest.GetResource(), destOffset, (ID3D12Resource*)src.GetResource(), srcOffset, numBytes);
+		initContext.TransitionResource(dest, D3D12_RESOURCE_STATE_GENERIC_READ, true);
+
+		// Execute the command list and wait for it to finish so we can release the upload buffer
+		initContext.Finish(true);
 	}
 
 	void CommandContext::InitializeTexture(GpuResource& dest, UINT NumSubresources, D3D12_SUBRESOURCE_DATA subData[])
 	{
 		CommandContext& initContext = CommandContext::Begin();
 
-		//TODO
+		UINT64 uploadBufferSize = GetRequiredIntermediateSize(dest.GetResource(), 0, NumSubresources);
+		GpuUploadBuffer uploadBuffer(1, uploadBufferSize);
+
+		UpdateSubresources(initContext.m_CommandList.Get(), dest.GetResource(), uploadBuffer.GetResource(), 0, 0, NumSubresources, subData);
+		initContext.TransitionResource(dest, D3D12_RESOURCE_STATE_GENERIC_READ);
+
+		initContext.Finish(true);
 	}
 
 	D3D12DynamicAllocation CommandContext::AllocateDynamicSpace(size_t numByte, size_t alignment)
 	{
 		return m_DynamicResourceHeap.Allocate(numByte, alignment);
+	}
+
+	void CommandContext::TransitionResource(GpuResource& resource, D3D12_RESOURCE_STATES NewState, bool FlushImmediate /*= false*/)
+	{
+		D3D12_RESOURCE_STATES OldState = resource.m_UsageState;
+
+		// Limit the state that the Compute pipeline can be excessive
+		if (m_type == D3D12_COMMAND_LIST_TYPE_COMPUTE)
+		{
+			assert((OldState & VALID_COMPUTE_QUEUE_RESOURCE_STATES) == OldState);
+			assert((NewState & VALID_COMPUTE_QUEUE_RESOURCE_STATES) == NewState);
+		}
+
+		if (OldState != NewState)
+		{
+			assert(m_numBarriersToFlush < 16 && "Exceeded arbitrary limit on buffered barriers");
+			D3D12_RESOURCE_BARRIER& barrierDesc = m_ResourceBarrierBuffer[m_numBarriersToFlush++];
+
+			barrierDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+			barrierDesc.Transition.pResource = resource.GetResource();
+			barrierDesc.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+			barrierDesc.Transition.StateBefore = OldState;
+			barrierDesc.Transition.StateAfter = NewState;
+
+			// Check to see if we already started the transition
+			if (NewState == resource.m_TransitioningState)
+			{
+				barrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_END_ONLY;
+				resource.m_TransitioningState = (D3D12_RESOURCE_STATES)-1;
+			}
+			else
+				barrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+
+			resource.m_UsageState = NewState;
+		}
+
+		if(FlushImmediate || m_numBarriersToFlush == 16)
+			FlushResourceBarriers();
+	}
+
+	void CommandContext::FlushResourceBarriers(void)
+	{
+		if (m_numBarriersToFlush > 0)
+		{
+			m_CommandList->ResourceBarrier(m_numBarriersToFlush, m_ResourceBarrierBuffer);
+			m_numBarriersToFlush = 0;
+		}
 	}
 }

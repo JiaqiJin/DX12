@@ -19,6 +19,8 @@ namespace RHI
 		template<typename DeviceObjectType>
 		void SafeReleaseDeviceObject(DeviceObjectType&& object);
 
+		void PurgeReleaseQueue(bool forceRelease);
+
 		// Getters
 		ID3D12Device* GetD3D12Device() { return m_device.Get(); }
 
