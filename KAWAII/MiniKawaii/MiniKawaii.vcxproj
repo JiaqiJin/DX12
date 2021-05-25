@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClInclude Include="Common\d3dx12.h" />
     <ClInclude Include="Common\Align.h" />
+    <ClInclude Include="Core\Color.h" />
     <ClInclude Include="Core\RingBuffer.h" />
     <ClInclude Include="Math\Common.h" />
     <ClInclude Include="Math\Matrix3.h" />
@@ -38,6 +39,8 @@
     <ClInclude Include="RHI\DescriptorHeap.h" />
     <ClInclude Include="RHI\DynamicResource.h" />
     <ClInclude Include="RHI\GpuBuffer.h" />
+    <ClInclude Include="RHI\GpuRenderTexture.h" />
+    <ClInclude Include="RHI\GpuRenderTextureColor.h" />
     <ClInclude Include="RHI\GpuResource.h" />
     <ClInclude Include="RHI\GpuResourceDescriptor.h" />
     <ClInclude Include="RHI\GpuTexture.h" />
@@ -58,6 +61,7 @@
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Core\Color.cpp" />
     <ClCompile Include="Core\RingBuffer.cpp" />
     <ClCompile Include="Engine.cpp" />
     <ClCompile Include="main.cpp" />
@@ -70,6 +74,8 @@
     <ClCompile Include="RHI\DescriptorHeap.cpp" />
     <ClCompile Include="RHI\DynamicResource.cpp" />
     <ClCompile Include="RHI\GpuBuffer.cpp" />
+    <ClCompile Include="RHI\GpuRenderTexture.cpp" />
+    <ClCompile Include="RHI\GpuRenderTextureColor.cpp" />
     <ClCompile Include="RHI\GpuResource.cpp" />
     <ClCompile Include="RHI\GpuResourceDescriptor.cpp" />
     <ClCompile Include="RHI\GpuTexture.cpp" />
