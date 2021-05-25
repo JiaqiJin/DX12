@@ -12,6 +12,7 @@ namespace RHI
 	* Default state : GPU READ/WRITE
 	* Upload state : CPU WRITE, GPU READ
 	* Dynamic state : Dynamic buffer, CPU READ, GPU WRITE
+	* 1- Creating the Committed Resource (CreateCommittedResource), 2 - Resource Barrier  
 	*/
 	class GpuBuffer : public GpuResource
 	{
@@ -65,6 +66,7 @@ namespace RHI
 		}
 	};
 
+	// Upload heaps must start  out in the state D3D12_RESOURCE_STATE_GENERIC_READ
 	class GpuUploadBuffer : public GpuBuffer
 	{
 	public:

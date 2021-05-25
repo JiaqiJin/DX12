@@ -138,6 +138,7 @@ namespace RHI
 		memcpy(dataPtr, data, numBytes);
 
 		// Resource Transition
+		// Before a heap can be the target of a GPU copy operation, the heap must first be transitioned to the D3D12_RESOURCE_STATE_COPY_DEST
 		initContext.TransitionResource(Dest, D3D12_RESOURCE_STATE_COPY_DEST, true);
 		initContext.m_CommandList->CopyBufferRegion(Dest.GetResource(), destOffset, uploadBuffer.GetResource(), 0, numBytes);
 		initContext.TransitionResource(Dest, D3D12_RESOURCE_STATE_GENERIC_READ, true);
@@ -198,18 +199,19 @@ namespace RHI
 
 			barrierDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 			barrierDesc.Transition.pResource = resource.GetResource();
-			barrierDesc.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+			barrierDesc.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES; // All subresource within a resource are being transitioned
 			barrierDesc.Transition.StateBefore = OldState;
 			barrierDesc.Transition.StateAfter = NewState;
 
 			// Check to see if we already started the transition
 			if (NewState == resource.m_TransitioningState)
 			{
-				barrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_END_ONLY;
+				// The (sub)resource cannot be read or written by the GPU
+				barrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_END_ONLY; // Begins a split barrier and the transition barrier is said to be pending. 
 				resource.m_TransitioningState = (D3D12_RESOURCE_STATES)-1;
 			}
 			else
-				barrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+				barrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE; // Barrier completes the pending transition.
 
 			resource.m_UsageState = NewState;
 		}
@@ -222,6 +224,7 @@ namespace RHI
 	{
 		if (m_numBarriersToFlush > 0)
 		{
+			// Resource Barrier notifies the drive that need to synchronize multiple accesses to resource.
 			m_CommandList->ResourceBarrier(m_numBarriersToFlush, m_ResourceBarrierBuffer);
 			m_numBarriersToFlush = 0;
 		}

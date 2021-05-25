@@ -71,7 +71,12 @@ namespace RHI
 
 		// Allocate memory from Dynamic Resource
 		D3D12DynamicAllocation AllocateDynamicSpace(size_t numByte, size_t alignment);
-
+		// https://docs.microsoft.com/en-us/windows/win32/direct3d12/using-resource-barriers-to-synchronize-resource-states-in-direct3d-12
+		// GpuResource has two members : 
+		// m_UsageState : Represent the current state of the resource. When TransitionResource is called, the current state of the resource
+		// will be check with m_UsageState. If it not equal, submit the resource barrier.
+		// m_TransitionState : Indicates the state of the resource in transition, used the split barrier to mark that resource has begin the Barrier
+		// So try to cache to 16 and then execute them together (FlushResourceBarriers) ?
 		void TransitionResource(GpuResource& resource, D3D12_RESOURCE_STATES newState, bool FlushImmediate = true);
 		void FlushResourceBarriers(void);
 
