@@ -41,6 +41,7 @@
     <ClInclude Include="RHI\GpuBuffer.h" />
     <ClInclude Include="RHI\GpuRenderTexture.h" />
     <ClInclude Include="RHI\GpuRenderTextureColor.h" />
+    <ClInclude Include="RHI\GpuRenderTextureDepth.h" />
     <ClInclude Include="RHI\GpuResource.h" />
     <ClInclude Include="RHI\GpuResourceDescriptor.h" />
     <ClInclude Include="RHI\GpuTexture.h" />
@@ -76,6 +77,7 @@
     <ClCompile Include="RHI\GpuBuffer.cpp" />
     <ClCompile Include="RHI\GpuRenderTexture.cpp" />
     <ClCompile Include="RHI\GpuRenderTextureColor.cpp" />
+    <ClCompile Include="RHI\GpuRenderTextureDepth.cpp" />
     <ClCompile Include="RHI\GpuResource.cpp" />
     <ClCompile Include="RHI\GpuResourceDescriptor.cpp" />
     <ClCompile Include="RHI\GpuTexture.cpp" />
