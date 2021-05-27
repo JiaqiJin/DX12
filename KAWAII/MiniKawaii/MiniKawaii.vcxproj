@@ -46,9 +46,11 @@
     <ClInclude Include="RHI\GpuResourceDescriptor.h" />
     <ClInclude Include="RHI\GpuTexture.h" />
     <ClInclude Include="RHI\GpuTexture2D.h" />
+    <ClInclude Include="RHI\GraphicsEnums.h" />
     <ClInclude Include="RHI\PipelineState.h" />
     <ClInclude Include="RHI\RenderDevice.h" />
     <ClInclude Include="RHI\RootSignature.h" />
+    <ClInclude Include="RHI\Shader.h" />
     <ClInclude Include="RHI\VariableSizeAllocationsManager.h" />
     <ClInclude Include="Util\d3dUtil.h" />
     <ClInclude Include="Util\Debug.h" />
@@ -85,6 +87,7 @@
     <ClCompile Include="RHI\PipelineState.cpp" />
     <ClCompile Include="RHI\RenderDevice.cpp" />
     <ClCompile Include="RHI\RootSignature.cpp" />
+    <ClCompile Include="RHI\Shader.cpp" />
     <ClCompile Include="RHI\VariableSizeAllocationsManager.cpp" />
     <ClCompile Include="Util\d3dUtil.cpp" />
     <ClCompile Include="Util\Debug.cpp" />
