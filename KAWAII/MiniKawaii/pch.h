@@ -36,6 +36,7 @@
 #include "Util/MathHelper.h"
 #include "Util/Singleton.h"
 #include "Util/Debug.h"
+#include "Util/HashUtils.hpp"
 
 // C++
 #include <array>
