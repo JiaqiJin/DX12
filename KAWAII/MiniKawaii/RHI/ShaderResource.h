@@ -125,6 +125,7 @@ namespace RHI
 		const ShaderResourceAttribs& GetBufUAV(UINT32 n) const noexcept { assert(n >= 0 && n < m_BufferUAVs.size()); return *m_BufferUAVs[n].get(); }
 
 		SHADER_TYPE GetShaderType() const noexcept { return m_ShaderType; }
+		const std::string& GetShaderName() const { return m_ShaderName; }
 
 		template <typename THandleCB,
 			typename THandleTexSRV,
@@ -154,6 +155,19 @@ namespace RHI
 		}
 
 		size_t GetHash() const;
+
+		bool IsCompatibleWith(const ShaderResource& shaderResource) const;
+
+		// Find the Variable Type (Static, Mutable, Dynamic) corresponding to ShaderResource 
+		// from the ShaderVariableConfig of the PSO configured in the upper layer
+		SHADER_RESOURCE_VARIABLE_TYPE FindVariableType(const ShaderResourceAttribs& ResourceAttribs,
+			const ShaderVariableConfig& shaderVariableConfig) const;
+
+		void GetShaderModel(UINT32& Major, UINT32& Minor) const
+		{
+			Major = (m_ShaderVersion & 0x000000F0) >> 4;
+			Minor = (m_ShaderVersion & 0x0000000F);
+		}
 
 	private:
 		// The purpose of grouping here is to convert the different types in D3D into these types: CBV, TexSRV, TexUAV, BufferSRV, BufferUAV
