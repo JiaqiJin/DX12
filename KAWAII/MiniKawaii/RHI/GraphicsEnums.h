@@ -18,6 +18,14 @@ namespace RHI
 		SHADER_TYPE_LAST = SHADER_TYPE_MESH
 	};
 
+	// Pipeline type: Graphic, Compute, Mesh
+	enum PIPELINE_TYPE
+	{
+		PIPELINE_TYPE_GRAPHIC,
+		PIPELINE_TYPE_COMPUTE,
+		PIPELINE_TYPE_MESH
+	};
+
 	// Divide Shader variables according to update frequency
 	enum SHADER_RESOURCE_VARIABLE_TYPE
 	{
