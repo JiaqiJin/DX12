@@ -22,7 +22,7 @@ namespace RHI
 	{
 		SHADER_RESOURCE_VARIABLE_TYPE DefaultVariableType = SHADER_RESOURCE_VARIABLE_TYPE_STATIC;
 
-		std::vector<ShaderResourceVariableDesc> Variable;
+		std::vector<ShaderResourceVariableDesc> Variables;
 	};
 	/*
 	* Hardware setting that determine how the input data is interpreted and rendered (Setting : rasterizer state, blend state etc)

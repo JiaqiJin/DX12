@@ -53,6 +53,7 @@
     <ClInclude Include="RHI\Shader.h" />
     <ClInclude Include="RHI\ShaderResource.h" />
     <ClInclude Include="RHI\ShaderResourceBindingUtility.h" />
+    <ClInclude Include="RHI\ShaderResourceCache.h" />
     <ClInclude Include="RHI\ShaderResourceLayout.h" />
     <ClInclude Include="RHI\VariableSizeAllocationsManager.h" />
     <ClInclude Include="Util\d3dUtil.h" />
@@ -94,6 +95,7 @@
     <ClCompile Include="RHI\Shader.cpp" />
     <ClCompile Include="RHI\ShaderResource.cpp" />
     <ClCompile Include="RHI\ShaderResourceBindingUtility.cpp" />
+    <ClCompile Include="RHI\ShaderResourceCache.cpp" />
     <ClCompile Include="RHI\ShaderResourceLayout.cpp" />
     <ClCompile Include="RHI\VariableSizeAllocationsManager.cpp" />
     <ClCompile Include="Util\d3dUtil.cpp" />
