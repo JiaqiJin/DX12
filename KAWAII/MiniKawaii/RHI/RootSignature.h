@@ -7,11 +7,12 @@
 // https://docs.microsoft.com/en-us/windows/win32/direct3d12/root-signatures-overview
 // https://docs.microsoft.com/en-us/windows/win32/direct3d12/creating-a-root-signature
 // https://docs.microsoft.com/en-us/windows/win32/direct3d12/example-root-signatures
-/*
+/*The root signature is an object intended to manage all resource bindings in a DirectX 12 application.
 * Root signature defines an array of root parameters. 
 * Every parameter is assigned a unique root index and can be one of the following: root constant, root table or root view. 
 * Every root table consists of one or more descriptor ranges. 
 * Descriptor range is a continuous range of one or more descriptors of the same type. 
+* Exampler DR : DescRange[0].Init(D3D12_DESCRIPTOR_RANGE_SRV,6,2); DescRange[1].Init(D3D12_DESCRIPTOR_RANGE_UAV,4,0); 
 */
 namespace RHI
 {
@@ -261,8 +262,118 @@ namespace RHI
 		RootSignature(RenderDevice* renderDevice);
 		~RootSignature();
 
+		// Complete the construction of Root Signature and create Root Signature of Direct3D 12
+		void Finalize(ID3D12Device* pd3d12Device);
+
+		ID3D12RootSignature* GetD3D12RootSignature() const { return m_pd3d12RootSignature.Get(); }
+
+		// Allocated for each ShaderResource in the Shader
+		void AllocateResourceSlot(SHADER_TYPE ShaderType,
+			PIPELINE_TYPE                   PipelineType,
+			const ShaderResourceAttribs& ShaderResAttribs,
+			SHADER_RESOURCE_VARIABLE_TYPE   VariableType,
+			D3D12_DESCRIPTOR_RANGE_TYPE     RangeType,
+			UINT32& RootIndex,
+			UINT32& OffsetFromTableStart);
+
 	private:
-		RenderDevice* m_RenderDevice;
 		Microsoft::WRL::ComPtr<ID3D12RootSignature> m_pd3d12RootSignature;
+
+		std::array<const CD3DX12_STATIC_SAMPLER_DESC, 7> GetStaticSamplers();
+
+		// Class to help manage RootParam
+		// The class contains two arrays: root tables and root views
+		class RootParamsManager
+		{
+		public:
+			UINT32 GetRootTableNum() const { return m_RootTables.size(); }
+			UINT32 GetRootDescriptorNum() const { return m_RootDescriptors.size(); }
+
+			const RootParameter& GetRootTable(UINT32 tableIndex) const
+			{
+				assert(tableIndex < m_RootTables.size());
+				return m_RootTables[tableIndex];
+			}
+
+			RootParameter& GetRootTable(UINT32 tableIndex)
+			{
+				assert(tableIndex < m_RootTables.size());
+				return m_RootTables[tableIndex];
+			}
+
+			const RootParameter& GetRootDescriptor(UINT32 descriptorIndex) const
+			{
+				assert(descriptorIndex < m_RootDescriptors.size());
+				return m_RootDescriptors[descriptorIndex];
+			}
+
+			RootParameter& GetRootDescriptor(UINT32 descriptorIndex)
+			{
+				assert(descriptorIndex < m_RootDescriptors.size());
+				return m_RootDescriptors[descriptorIndex];
+			}
+
+			// Adding new RootView
+			void AddRootDescriptor(D3D12_ROOT_PARAMETER_TYPE     ParameterType,
+				UINT32                        RootIndex,
+				UINT                          Register,
+				D3D12_SHADER_VISIBILITY       Visibility,
+				SHADER_RESOURCE_VARIABLE_TYPE VarType);
+
+			// Adding new RootTable
+			void AddRootTable(UINT32                        RootIndex,
+				D3D12_SHADER_VISIBILITY       Visibility,
+				SHADER_RESOURCE_VARIABLE_TYPE VarType,
+				UINT32                        NumRangesInNewTable = 1);
+
+			// Add Descriptor Range to the existing RootTable
+			void AddDescriptorRanges(UINT32 RootTableInd, UINT32 NumExtraRanges = 1);
+
+			template <typename TOperation>
+			void ProcessRootDescriptors(TOperation) const;
+
+			template <typename TOperation>
+			void ProcessRootTables(TOperation) const;
+
+			bool   operator==(const RootParamsManager& RootParams) const;
+			size_t GetHash() const;
+
+		private:
+			std::vector<RootParameter> m_RootTables; 
+			std::vector<RootParameter> m_RootDescriptors;
+		};
+		// 
+		RootParamsManager m_RootParams;
+
+		RenderDevice* m_RenderDevice;
+
+		// Record the total number of Descriptors of all RootTables of each Variable type
+		std::array<UINT32, SHADER_RESOURCE_VARIABLE_TYPE_NUM_TYPES> m_NumDescriptorInRootTable = {};
+		// Record the number of all RootDescriptor of each Variable type
+		std::array<UINT32, SHADER_RESOURCE_VARIABLE_TYPE_NUM_TYPES> m_NumRootDescriptor = {};
+
+		static constexpr UINT8 InvalidRootTableIndex = static_cast<UINT8>(-1);
+
+		std::array<UINT8, SHADER_RESOURCE_VARIABLE_TYPE_NUM_TYPES* MAX_SHADERS_IN_PIPELINE> m_SrvCbvUavRootTablesMap = {};
 	};
+
+	template <typename TOperation>
+	void RootSignature::RootParamsManager::ProcessRootDescriptors(TOperation Operation) const
+	{
+		for (UINT32 i = 0; i < m_RootDescriptors.size(); ++i)
+		{
+			const RootParameter& rootView = m_RootDescriptors[i];
+			Operation(m_RootDescriptors[i]);
+		}
+	}
+
+	template <typename TOperation>
+	void RootSignature::RootParamsManager::ProcessRootTables(TOperation Operation) const
+	{
+		for (UINT32 i = 0; i < m_RootTables.size(); ++i)
+		{
+			const RootParameter& rootTable = m_RootTables[i];
+			Operation(m_RootTables[i]);
+		}
+	}
 }
