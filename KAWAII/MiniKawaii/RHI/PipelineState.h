@@ -1,8 +1,12 @@
 #pragma once
 
+#include "RootSignature.h"
 #include "Shader.h"
 #include "ShaderResource.h"
 #include "ShaderResourceLayout.h"
+#include "ShaderResourceCache.h"
+#include "ShaderResourceBindingUtility.h"
+
 
 namespace RHI
 {
@@ -29,6 +33,7 @@ namespace RHI
 	*/
 	class PipelineState
 	{
+		friend class CommandContext;
 	public:
 		PipelineState(RenderDevice* renderDivice);
 		~PipelineState();
@@ -38,7 +43,9 @@ namespace RHI
 		RenderDevice* GetRenderDevice() const { return m_RenderDevice; }
 	private:
 		RenderDevice* m_RenderDevice;
-
+		// Root Signature
+		RootSignature m_RootSignature;
+		// PSO
 		Microsoft::WRL::ComPtr<ID3D12PipelineState> m_D3D12PSO;
 	};
 }

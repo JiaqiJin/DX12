@@ -4,6 +4,11 @@
 
 namespace RHI
 {
+    bool IsAllowedType(SHADER_RESOURCE_VARIABLE_TYPE varType, UINT32 allowedTypeBits) noexcept
+    {
+        return ((1 << varType) & allowedTypeBits) != 0;
+    }
+
     SHADER_RESOURCE_VARIABLE_TYPE GetShaderVariableType(SHADER_TYPE shaderType,
         const std::string& name,
         const ShaderVariableConfig& shaderVariableConfig)
@@ -17,6 +22,17 @@ namespace RHI
                 return curVarDesc.Type;
             }
         }
+    }
+
+    UINT32 GetAllowedTypeBits(const SHADER_RESOURCE_VARIABLE_TYPE* allowedVarTypes, UINT32 allowedTypeNum) noexcept
+    {
+        if (allowedVarTypes == nullptr)
+            return 0xFFFFFFFF;
+
+        UINT32 AllowedTypeBits = 0;
+        for (UINT32 i = 0; i < allowedTypeNum; ++i)
+            AllowedTypeBits |= 1 << allowedVarTypes[i];
+        return AllowedTypeBits;
     }
 
     bool IsConsistentShaderType(SHADER_TYPE ShaderType, PIPELINE_TYPE PipelineType)

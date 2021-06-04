@@ -18,6 +18,7 @@ namespace RHI
 {
 	class RenderDevice;
 	// A root parameter is one entry in the root signature.
+	// A root parameter can be a root constant, root descriptor, or descriptor table.
 	class RootParameter
 	{
 	public:
@@ -29,9 +30,9 @@ namespace RHI
 		// Root Descriptor
 		RootParameter(D3D12_ROOT_PARAMETER_TYPE     ParameterType,
 			UINT32                        RootIndex,
-			UINT                          Register,
-			UINT                          RegisterSpace,
-			D3D12_SHADER_VISIBILITY       Visibility,
+			UINT                          Register, // Shader register arguments are bound to(cbuffer cbA : register(b1) {…}; 2...).
+			UINT                          RegisterSpace, //Texture2D gDiffuseMap:register(t0, space0);Texture2D gNormalMap:register(t0, space1);
+			D3D12_SHADER_VISIBILITY       Visibility, 
 			SHADER_RESOURCE_VARIABLE_TYPE VarType) noexcept :
 			m_RootIndex{ RootIndex },
 			m_ShaderVarType{ VarType }
@@ -248,6 +249,8 @@ namespace RHI
 		SHADER_RESOURCE_VARIABLE_TYPE m_ShaderVarType = static_cast<SHADER_RESOURCE_VARIABLE_TYPE>(-1);
 		UINT32 m_RootIndex = static_cast<UINT32>(-1);
 		UINT32 m_DescriptorTableSize = 0;
+		// A slot parameter initialized as a descriptor table takes an array of D3D12_DESCRIPTOR_RANGE
+		// CD3DX12_DESCRIPTOR_RANGE descRange[3]; [0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 2//dec_count, 0//shader_register) ...
 		std::vector<D3D12_DESCRIPTOR_RANGE> m_DescriptorRanges;
 	};
 
@@ -275,6 +278,30 @@ namespace RHI
 			D3D12_DESCRIPTOR_RANGE_TYPE     RangeType,
 			UINT32& RootIndex,
 			UINT32& OffsetFromTableStart);
+
+		// The total number of all Descriptors in the RootTable of VarType type
+		UINT32 GetNumDescriptorInRootTable(SHADER_RESOURCE_VARIABLE_TYPE VarType) const
+		{
+			return m_NumDescriptorInRootTable[VarType];
+		}
+
+		// The number of RootView of VarType type
+		UINT32 GetNumRootDescriptor(SHADER_RESOURCE_VARIABLE_TYPE VarType) const
+		{
+			return m_NumRootDescriptor[VarType];
+		}
+
+		template <typename TOperation>
+		void ProcessRootDescriptors(TOperation Operation) const
+		{
+			m_RootParams.ProcessRootDescriptors(Operation);
+		}
+
+		template <typename TOperation>
+		void ProcessRootTables(TOperation Operation) const
+		{
+			m_RootParams.ProcessRootTables(Operation);
+		}
 
 	private:
 		Microsoft::WRL::ComPtr<ID3D12RootSignature> m_pd3d12RootSignature;
@@ -342,7 +369,16 @@ namespace RHI
 			std::vector<RootParameter> m_RootTables; 
 			std::vector<RootParameter> m_RootDescriptors;
 		};
-		// 
+		// RootParameter includes Root View and Root Table, which are stored in two Vectors respectively, --------
+		// When constructing RootParameter, it is processed in the order of declaration in Shader,
+		// and RootIndex is also in the order of declaration
+		// CBV is saved as RootView, others are grouped according to update frequency, Static, Mutable, 
+		// and Dynamic are saved as three groups of Root Tables, 
+		// and different Shaders are saved separately, so the maximum number of Root Tables is: Shader number x 3
+		// The m_SrvCbvUavRootTablesMap below stores the index of the Root Table of the specified Shader stage 
+		// and the specified Shader Variable type in the m_RootTables above (not the Root Index)
+		// Used to determine whether a RootTable of a Variable Type of a Shader has been created. 
+		// If it has been created, add the Descriptor Range to the Root Table. If it is not created, create a new Root Table.
 		RootParamsManager m_RootParams;
 
 		RenderDevice* m_RenderDevice;

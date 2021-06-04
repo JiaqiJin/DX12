@@ -29,7 +29,40 @@ namespace RHI
 
 		~ShaderResourceCache() = default;
 
-	private:
+		void Initialize(RenderDevice* device, const RootSignature* rootSignature, 
+			const SHADER_RESOURCE_VARIABLE_TYPE* allowedVarTypes, UINT32 allowedTypeNum);
 
+		static constexpr UINT32 InvalidDescriptorOffset = static_cast<UINT32>(-1);
+
+		struct RootDescriptor
+		{
+			RootDescriptor(SHADER_RESOURCE_VARIABLE_TYPE _VariableType) : VariableType(_VariableType) {}
+
+			SHADER_RESOURCE_VARIABLE_TYPE VariableType;
+			std::shared_ptr<GpuBuffer> ConstantBuffer = nullptr;
+		};
+
+		struct RootTable
+		{
+			RootTable(SHADER_RESOURCE_VARIABLE_TYPE _VariableType = SHADER_RESOURCE_VARIABLE_TYPE_STATIC, UINT32 tableSize = 0) :
+				Descriptors(tableSize, nullptr),
+				VariableType(_VariableType)
+			{
+			}
+
+			SHADER_RESOURCE_VARIABLE_TYPE VariableType;
+			UINT32 TableStartOffset = InvalidDescriptorOffset;
+			std::vector<std::shared_ptr<GpuResourceDescriptor>> Descriptors;
+		};
+
+	private:
+		// GPU Descriptor Heap
+		DescriptorHeapAllocation m_CbvSrvUavGPUHeapSpace;
+		UINT32 m_NumDynamicDescriptor = 0;
+
+		std::unordered_map<UINT32/*RootIndex*/, RootDescriptor> m_RootDescriptors;
+		std::unordered_map<UINT32/*RootIndex*/, RootTable> m_RootTables;
+
+		ID3D12Device* m_D3D12Device;
 	};
 }
