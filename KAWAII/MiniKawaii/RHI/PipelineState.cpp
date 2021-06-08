@@ -4,8 +4,10 @@
 
 namespace RHI
 {
-	PipelineState::PipelineState(RenderDevice* renderDivice)
-		: m_RenderDevice(renderDivice)
+	PipelineState::PipelineState(RenderDevice* renderDevice, const PipelineStateDesc& desc)
+		: m_RenderDevice{ renderDevice },
+		m_Desc{ desc },
+		m_RootSignature{ renderDevice }
 	{
 		auto device = m_RenderDevice->GetD3D12Device();
 

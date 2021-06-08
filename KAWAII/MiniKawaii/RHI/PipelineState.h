@@ -28,6 +28,12 @@ namespace RHI
 
 		std::vector<ShaderResourceVariableDesc> Variables;
 	};
+
+	struct PipelineStateDesc
+	{
+
+	};
+
 	/*
 	* Hardware setting that determine how the input data is interpreted and rendered (Setting : rasterizer state, blend state etc)
 	*/
@@ -35,7 +41,7 @@ namespace RHI
 	{
 		friend class CommandContext;
 	public:
-		PipelineState(RenderDevice* renderDivice);
+		PipelineState(RenderDevice* renderDevice, const PipelineStateDesc& desc);
 		~PipelineState();
 
 		// GETTERS
@@ -47,5 +53,7 @@ namespace RHI
 		RootSignature m_RootSignature;
 		// PSO
 		Microsoft::WRL::ComPtr<ID3D12PipelineState> m_D3D12PSO;
+
+		PipelineStateDesc m_Desc;
 	};
 }

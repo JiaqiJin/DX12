@@ -369,7 +369,7 @@ namespace RHI
 			std::vector<RootParameter> m_RootTables; 
 			std::vector<RootParameter> m_RootDescriptors;
 		};
-		// RootParameter includes Root View and Root Table, which are stored in two Vectors respectively, --------
+		// RootParameter includes Root View and Root Table, which are stored in two Vectors respectively,
 		// When constructing RootParameter, it is processed in the order of declaration in Shader,
 		// and RootIndex is also in the order of declaration
 		// CBV is saved as RootView, others are grouped according to update frequency, Static, Mutable, 

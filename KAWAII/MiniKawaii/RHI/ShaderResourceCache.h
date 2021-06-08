@@ -55,6 +55,60 @@ namespace RHI
 			std::vector<std::shared_ptr<GpuResourceDescriptor>> Descriptors;
 		};
 
+		// ShaderResourceLayout obtains the Descriptor Handle through this function, and copies the Descriptor of the resource to be bound!!!
+		// OffsetFromTableStart is the offset in the Table, which is different from RootParam.m_TableStartOffset
+		template <D3D12_DESCRIPTOR_HEAP_TYPE HeapType>
+		D3D12_CPU_DESCRIPTOR_HANDLE GetShaderVisibleTableCPUDescriptorHandle(UINT32 RootIndex, UINT32 OffsetFromTableStart = 0)
+		{
+			const auto& RootParam = GetRootTable(RootIndex);
+
+			D3D12_CPU_DESCRIPTOR_HANDLE CPUDescriptorHandle = { 0 };
+			
+			if (RootParam.TableStartOffset != InvalidDescriptorOffset)
+			{
+				CPUDescriptorHandle = m_CbvSrvUavGPUHeapSpace.GetCpuHandle(RootParam.TableStartOffset + OffsetFromTableStart);
+			}
+
+			return CPUDescriptorHandle;
+		}
+
+		// RootSignature uses this function to access the GPU Descriptor Handle, and then submits it to the rendering pipeline!!!
+		// OffsetFromTableStart is the offset in the Table, which is different from RootParam.m_TableStartOffset
+		template <D3D12_DESCRIPTOR_HEAP_TYPE HeapType>
+		D3D12_GPU_DESCRIPTOR_HANDLE GetShaderVisibleTableGPUDescriptorHandle(UINT32 RootIndex, UINT32 OffsetFromTableStart = 0) const
+		{
+			const auto& RootParam = GetRootTable(RootIndex);
+
+			assert(RootParam.TableStartOffset != InvalidDescriptorOffset && "GPU descriptor handle must never be requested for dynamic resources");
+
+			D3D12_GPU_DESCRIPTOR_HANDLE GPUDescriptorHandle = m_CbvSrvUavGPUHeapSpace.GetGpuHandle(RootParam.TableStartOffset + OffsetFromTableStart);
+
+			return GPUDescriptorHandle;
+		}
+
+		void CommitResource(CommandContext& cmdContext);
+
+		// Getters
+		RootDescriptor& GetRootDescriptor(UINT32 RootIndex)
+		{
+			return m_RootDescriptors.at(RootIndex);
+		}
+
+		const RootDescriptor& GetRootDescriptor(UINT32 RootIndex) const
+		{
+			return m_RootDescriptors.at(RootIndex);
+		}
+
+		RootTable& GetRootTable(UINT32 RootIndex)
+		{
+			return m_RootTables.at(RootIndex);
+		}
+
+		const RootTable& GetRootTable(UINT32 RootIndex) const
+		{
+			return m_RootTables.at(RootIndex);
+		}
+
 	private:
 		// GPU Descriptor Heap
 		DescriptorHeapAllocation m_CbvSrvUavGPUHeapSpace;
