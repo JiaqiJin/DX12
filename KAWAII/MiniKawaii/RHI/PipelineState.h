@@ -28,7 +28,7 @@ namespace RHI
 
 		std::vector<ShaderResourceVariableDesc> Variables;
 	};
-
+	// Descipe Pipeline State
 	struct PipelineStateDesc
 	{
 
