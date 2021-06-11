@@ -80,6 +80,18 @@ namespace RHI
 		ShaderVariable* GetStaticVariableByName(SHADER_TYPE shaderType, std::string name);
 		ShaderVariable* GetStaticVariableByIndex(SHADER_TYPE shaderType, UINT32 index);
 
+		template<typename TOperation>
+		void ProcessShaders(TOperation Operation) const
+		{
+			for (const auto& [shaderType, shader] : m_Shaders)
+			{
+				Operation(shaderType, m_ShaderResourceLayouts.at(shaderType));
+			}
+		}
+
+		ID3D12RootSignature* GetD3D12RootSignature() const { return m_RootSignature.GetD3D12RootSignature(); }
+		const RootSignature* GetRootSignature() const { return &m_RootSignature; }
+
 		ID3D12PipelineState* GetD3D12PipelineState() const { return m_D3D12PSO.Get(); }
 		RenderDevice* GetRenderDevice() const { return m_RenderDevice; }
 	private:
@@ -90,5 +102,11 @@ namespace RHI
 		Microsoft::WRL::ComPtr<ID3D12PipelineState> m_D3D12PSO;
 
 		PipelineStateDesc m_Desc;
+
+		// Using shared_ptr, a Shader may be shared by multiple PSOs
+		std::unordered_map<SHADER_TYPE, std::shared_ptr<Shader>> m_Shaders;
+		std::unordered_map<SHADER_TYPE, ShaderResourceLayout> m_ShaderResourceLayouts;
+
+		std::unique_ptr<ShaderResourceBinding> m_StaticSRB;
 	};
 }

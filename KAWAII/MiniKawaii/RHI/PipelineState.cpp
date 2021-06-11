@@ -22,4 +22,9 @@ namespace RHI
 			m_RenderDevice->SafeReleaseDeviceObject(std::move(m_D3D12PSO));
 	}
 
+	UINT32 PipelineState::GetStaticVariableCount(SHADER_TYPE ShaderType) const
+	{
+
+	}
+
 }
