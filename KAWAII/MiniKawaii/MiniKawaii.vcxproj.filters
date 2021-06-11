@@ -114,6 +114,12 @@
     <ClCompile Include="RHI\ShaderResourceCache.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="RHI\ShaderVariable.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RHI\ShaderResourceBinding.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common\d3dx12.h">
@@ -258,6 +264,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="RHI\ShaderResourceCache.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\ShaderVariable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RHI\ShaderResourceBinding.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
