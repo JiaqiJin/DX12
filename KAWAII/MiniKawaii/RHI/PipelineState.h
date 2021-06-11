@@ -3,6 +3,7 @@
 #include "RootSignature.h"
 #include "Shader.h"
 #include "ShaderVariable.h"
+#include "ShaderResourceBinding.h"
 #include "ShaderResource.h"
 #include "ShaderResourceLayout.h"
 #include "ShaderResourceCache.h"
@@ -79,6 +80,9 @@ namespace RHI
 		UINT32 GetStaticVariableCount(SHADER_TYPE ShaderType) const;
 		ShaderVariable* GetStaticVariableByName(SHADER_TYPE shaderType, std::string name);
 		ShaderVariable* GetStaticVariableByIndex(SHADER_TYPE shaderType, UINT32 index);
+
+		// Create SRB, the application binds Mutable and Dynamic resources through SRB, SRB object is owned by PSO
+		std::unique_ptr<ShaderResourceBinding> CreateShaderResourceBinding();
 
 		template<typename TOperation>
 		void ProcessShaders(TOperation Operation) const

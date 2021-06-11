@@ -1,5 +1,7 @@
 #pragma once
 
+#include "ShaderResource.h"
+
 namespace RHI
 {
 	class RenderDevice;
@@ -37,10 +39,14 @@ namespace RHI
 
 		ID3DBlob* GetShaderByteCode() { return m_ShaderByteCode.Get(); }
 
+		const ShaderResource* GetShaderResources() const { return m_ShaderResource.get(); }
+
 		SHADER_TYPE GetShaderType() const { return m_Desc.ShaderType; }
 
 	private:
 		ShaderDesc m_Desc;
+
+		std::unique_ptr<const ShaderResource> m_ShaderResource;
 
 		Microsoft::WRL::ComPtr<ID3DBlob> m_ShaderByteCode;
 	};
