@@ -2,6 +2,7 @@
 
 #include "RootSignature.h"
 #include "Shader.h"
+#include "ShaderVariable.h"
 #include "ShaderResource.h"
 #include "ShaderResourceLayout.h"
 #include "ShaderResourceCache.h"
@@ -12,6 +13,25 @@ namespace RHI
 {
 	class RenderDevice;
 	class CommandContext;
+
+	// Graphic pipeline
+	struct GraphicsPipelineDesc
+	{
+		std::shared_ptr<Shader> VertexShader = nullptr;
+		std::shared_ptr<Shader> PixelShader = nullptr;
+		std::shared_ptr<Shader> DomainShader = nullptr;
+		std::shared_ptr<Shader> HullShader = nullptr;
+		std::shared_ptr<Shader> GeometryShader = nullptr;
+		std::shared_ptr<Shader> AmplificationShader = nullptr;
+		std::shared_ptr<Shader> MeshShader = nullptr;
+
+		D3D12_GRAPHICS_PIPELINE_STATE_DESC GraphicPipelineState;
+	};
+
+	struct ComputePipelineDesc
+	{
+		Shader* ComputeShader;
+	};
 
 	struct ShaderResourceVariableDesc
 	{
@@ -28,10 +48,19 @@ namespace RHI
 
 		std::vector<ShaderResourceVariableDesc> Variables;
 	};
+
 	// Descipe Pipeline State
 	struct PipelineStateDesc
 	{
+		std::wstring Name = L"Default PSO";
 
+		PIPELINE_TYPE PipelineType;
+
+		ShaderVariableConfig VariableConfig;
+
+		GraphicsPipelineDesc GraphicsPipeline;
+
+		ComputePipelineDesc ComputePipeline;
 	};
 
 	/*
@@ -45,6 +74,12 @@ namespace RHI
 		~PipelineState();
 
 		// GETTERS
+		const PipelineStateDesc& Get() const { return m_Desc; }
+
+		UINT32 GetStaticVariableCount(SHADER_TYPE ShaderType) const;
+		ShaderVariable* GetStaticVariableByName(SHADER_TYPE shaderType, std::string name);
+		ShaderVariable* GetStaticVariableByIndex(SHADER_TYPE shaderType, UINT32 index);
+
 		ID3D12PipelineState* GetD3D12PipelineState() const { return m_D3D12PSO.Get(); }
 		RenderDevice* GetRenderDevice() const { return m_RenderDevice; }
 	private:
