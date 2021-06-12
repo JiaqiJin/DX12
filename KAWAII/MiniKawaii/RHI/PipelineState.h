@@ -98,6 +98,12 @@ namespace RHI
 
 		ID3D12PipelineState* GetD3D12PipelineState() const { return m_D3D12PSO.Get(); }
 		RenderDevice* GetRenderDevice() const { return m_RenderDevice; }
+
+	private:
+		void CommitStaticSRB(CommandContext& cmdContext);
+		void CommitSRB(CommandContext& cmdContext, ShaderResourceBinding* SRB);
+		void CommitDynamic(CommandContext& cmdContext, ShaderResourceBinding* SRB);
+
 	private:
 		RenderDevice* m_RenderDevice;
 		// Root Signature

@@ -239,17 +239,42 @@ namespace RHI
 		m_CommandList->SetPipelineState(PSO->GetD3D12PipelineState());
 		m_CommandList->SetGraphicsRootSignature(PSO->GetD3D12RootSignature());
 
-		// TODO
+		// Submit Static resources
+		PSO->CommitStaticSRB(*this);
 	}
 
 	void CommandContext::SetShaderResourceBinding(ShaderResourceBinding* SRB)
 	{
-		// TODO
+		assert(m_CurPSO != nullptr);
+		assert(SRB->m_PSO == m_CurPSO);
+
+		if (m_CurSRB == SRB)
+			return;
+		// Record SRB and submit Dynamic Shader Variable and Dynamic Buffer before Draw,
+		// because the GPU address of Dynamic Buffer will change when the data is modified,
+		// submit Dynamic Shader Vaiable before Draw to reduce the update frequency
+		m_CurSRB = SRB;
+
+		m_CurPSO->CommitSRB(*this, SRB);
 	}
 
 	void CommandContext::CommitDynamic()
 	{
-		// TODO
+		assert(m_CurPSO != nullptr);
+
+		if (m_CurSRB == nullptr)
+		{
+			m_CurPSO->CommitDynamic(*this, nullptr);
+		}
+		else
+		{
+			if (m_CurSRB->m_PSO != m_CurPSO)
+				LOG("Error Commit Dynamic");
+			assert(m_CurSRB != nullptr);
+			assert(m_CurSRB->m_PSO == m_CurPSO);
+
+			m_CurPSO->CommitDynamic(*this, m_CurSRB);
+		}
 	}
 
 	void CommandContext::SetDescriptorHeap(ID3D12DescriptorHeap* cbvsrvuavHeap, ID3D12DescriptorHeap* samplerHeap)

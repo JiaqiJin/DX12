@@ -142,4 +142,28 @@ namespace RHI
 
 		return SRB;
 	}
+
+	void PipelineState::CommitSRB(CommandContext& cmdContext, ShaderResourceBinding* SRB)
+	{
+		if (SRB != nullptr)
+		{
+			SRB->m_ShaderResourceCache.CommitResource(cmdContext);
+		}
+	}
+
+	void PipelineState::CommitDynamic(CommandContext& cmdContext, ShaderResourceBinding* SRB)
+	{
+		m_StaticSRB->m_ShaderResourceCache.CommitDynamic(cmdContext);
+
+		if (SRB != nullptr)
+		{
+			SRB->m_ShaderResourceCache.CommitDynamic(cmdContext);
+		}
+	}
+
+	void PipelineState::CommitStaticSRB(CommandContext& cmdContext)
+	{
+		m_StaticSRB->m_ShaderResourceCache.CommitResource(cmdContext);
+	}
+
 }
