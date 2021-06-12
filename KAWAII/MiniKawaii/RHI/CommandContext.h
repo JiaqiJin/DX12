@@ -76,7 +76,7 @@ namespace RHI
 			return reinterpret_cast<GraphicsContext&>(*this);
 		}
 
-
+		// Initialize resources
 		static void InitializeBuffer(GpuBuffer& dest, const void* data, size_t numBytes, size_t destOffset = 0);
 		static void InitializeBuffer(GpuBuffer& dest, const GpuUploadBuffer Src, size_t srcOffset, size_t numBytes = -1, size_t destOffset = 0);
 		static void InitializeTexture(GpuResource& dest, UINT NumSubresources, D3D12_SUBRESOURCE_DATA subData[]);
@@ -94,6 +94,7 @@ namespace RHI
 		// So try to cache to 16 and then execute them together (FlushResourceBarriers) ?
 		void TransitionResource(GpuResource& resource, D3D12_RESOURCE_STATES newState, bool FlushImmediate = true);
 		void FlushResourceBarriers(void);
+		void BeginResourceTransition(GpuResource& Resource, D3D12_RESOURCE_STATES NewState, bool FlushImmediate = false);
 
 		/*Rendering state and resource binding
 		* When switching PSO, Static SRB will be submitted automatically, Static SRB only binds Static Shader Variable

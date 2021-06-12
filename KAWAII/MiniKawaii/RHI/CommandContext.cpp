@@ -230,6 +230,40 @@ namespace RHI
 		}
 	}
 
+	void CommandContext::BeginResourceTransition(GpuResource& Resource, D3D12_RESOURCE_STATES NewState, bool FlushImmediate /*= false*/)
+	{
+		// If it's already transitioning, finish that transition
+		if (Resource.m_TransitioningState != (D3D12_RESOURCE_STATES)-1)
+			TransitionResource(Resource, Resource.m_TransitioningState);
+
+		D3D12_RESOURCE_STATES OldState = Resource.m_UsageState;
+
+		if (OldState != NewState)
+		{
+			assert(m_numBarriersToFlush < 16 && "Exceeded arbitrary limit on buffered barriers");
+			D3D12_RESOURCE_BARRIER& BarrierDesc = m_ResourceBarrierBuffer[m_numBarriersToFlush++];
+
+			BarrierDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+			BarrierDesc.Transition.pResource = Resource.GetResource();
+			BarrierDesc.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+			BarrierDesc.Transition.StateBefore = OldState;
+			BarrierDesc.Transition.StateAfter = NewState;
+
+			BarrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_BEGIN_ONLY;
+
+			Resource.m_TransitioningState = NewState;
+		}
+
+		if (FlushImmediate || m_numBarriersToFlush == 16)
+			FlushResourceBarriers();
+	}
+
+
+	DescriptorHeapAllocation CommandContext::AllocateDynamicGPUVisibleDescriptor(UINT Count /*= 1*/)
+	{
+		return m_DynamicGPUDescriptorAllocator.Allocate(Count);
+	}
+
 	void CommandContext::SetPipelineState(PipelineState* PSO)
 	{
 		assert(PSO != nullptr);

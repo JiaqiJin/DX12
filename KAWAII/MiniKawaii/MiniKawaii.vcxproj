@@ -57,6 +57,8 @@
     <ClInclude Include="RHI\ShaderResourceCache.h" />
     <ClInclude Include="RHI\ShaderResourceLayout.h" />
     <ClInclude Include="RHI\ShaderVariable.h" />
+    <ClInclude Include="RHI\StaleResourceWrapper.h" />
+    <ClInclude Include="RHI\SwapChain.h" />
     <ClInclude Include="RHI\VariableSizeAllocationsManager.h" />
     <ClInclude Include="Util\d3dUtil.h" />
     <ClInclude Include="Util\Debug.h" />
@@ -101,6 +103,8 @@
     <ClCompile Include="RHI\ShaderResourceCache.cpp" />
     <ClCompile Include="RHI\ShaderResourceLayout.cpp" />
     <ClCompile Include="RHI\ShaderVariable.cpp" />
+    <ClCompile Include="RHI\StaleResourceWrapper.cpp" />
+    <ClCompile Include="RHI\SwapChain.cpp" />
     <ClCompile Include="RHI\VariableSizeAllocationsManager.cpp" />
     <ClCompile Include="Util\d3dUtil.cpp" />
     <ClCompile Include="Util\Debug.cpp" />

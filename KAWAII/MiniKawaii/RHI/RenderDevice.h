@@ -1,7 +1,11 @@
 #pragma once
 
 #include "DescriptorHeap.h"
+#include "CommandQueue.h"
+#include "StaleResourceWrapper.h"
 #include "DynamicResource.h"
+#include "CommandListManager.h"
+
 
 namespace RHI
 {
@@ -41,12 +45,22 @@ namespace RHI
 		GPUDescriptorHeap m_GPUDescriptorHeaps[2];
 
 		DynamicResourceAllocator m_DynamicResAllocator;
+
+		// Queue responsible for releasing resources
+		// When SafeReleaseDeviceObject is called to release a resource, the resource will be added to m_StaleResources,
+		// When submitting a CommandList, the number of the next CommandList and the resources in m_StaleResources will be added to m_ReleaseQueue,
+		// At the end of each frame, call PurgeReleaseQueue to release resources that can be safely released 
+		// (that is, all resources with a recorded Cmd number smaller than the number of CmdList completed by the GPU)
+		using ReleaseQueueElementType = std::tuple<UINT64/*Graphic Queue Fence*/, StaleResourceWrapper>;
+		std::deque<ReleaseQueueElementType> m_ReleaseQueue;
 	};
 
 
 	template<typename DeviceObjectType>
 	inline void RenderDevice::SafeReleaseDeviceObject(DeviceObjectType&& object)
 	{
-		
+		auto wrapper = StaleResourceWrapper::Create(object);
+		uint64_t graphicNextFenceValue = CommandListManager::GetSingleton().GetGraphicsQueue().GetNextFenceValue();
+		m_ReleaseQueue.emplace_back(graphicNextFenceValue, std::move(wrapper));
 	}
 }
