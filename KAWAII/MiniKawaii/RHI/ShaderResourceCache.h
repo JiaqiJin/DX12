@@ -87,7 +87,7 @@ namespace RHI
 		}
 
 		void CommitResource(CommandContext& cmdContext);
-
+		void CommitDynamic(CommandContext& cmdContext);
 		// Getters
 		RootDescriptor& GetRootDescriptor(UINT32 RootIndex)
 		{
