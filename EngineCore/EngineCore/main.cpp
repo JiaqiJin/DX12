@@ -17,7 +17,7 @@ int main(int argc, const char* argv[])
 
 		auto setup = []()
 		{
-			
+
 		};
 
 		return app.Run(1024, 768, setup);
@@ -29,4 +29,3 @@ int main(int argc, const char* argv[])
 	}
 
 }
-// https://github.com/Jiaqidesune/DX12/tree/768b5dc7d5492cc8c70c09bf824838dc8d50ad2f

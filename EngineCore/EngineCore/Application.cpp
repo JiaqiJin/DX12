@@ -21,7 +21,7 @@ Application::Application(HINSTANCE hInstance)
 
 Application::~Application()
 {
-    
+
 }
 
 void Application::Initialize(int width, int height)
@@ -52,7 +52,7 @@ void Application::Update(float deltaTime)
 
 void Application::Render()
 {
-  
+
 }
 
 LRESULT Application::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -271,5 +271,5 @@ void Application::CalculateFrameStats()
 
 void Application::OnResize()
 {
-   
+
 }
