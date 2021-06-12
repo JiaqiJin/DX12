@@ -3,23 +3,24 @@
 
 using namespace DirectX;
 
-_Use_decl_annotations_
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
+#pragma comment(lib, "runtimeobject.lib")
+
+int main(int argc, const char* argv[])
 {
+	Microsoft::WRL::Wrappers::RoInitializeWrapper InitializeWinRT(RO_INIT_MULTITHREADED);
+
+	HINSTANCE hInst = GetModuleHandle(0);
+
 	try
 	{
-		Application app(hInstance);
-
-		EngineCreateInfo engineCI;
-		engineCI.Width = 1920;
-		engineCI.Height = 1080;
+		Application app(hInst);
 
 		auto setup = []()
 		{
-			
+
 		};
 
-		return app.RunN(engineCI, setup);
+		return app.Run(1024, 768, setup);
 	}
 	catch (DxException& e)
 	{
@@ -28,4 +29,3 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
 	}
 
 }
-// https://github.com/Jiaqidesune/DX12/tree/768b5dc7d5492cc8c70c09bf824838dc8d50ad2f

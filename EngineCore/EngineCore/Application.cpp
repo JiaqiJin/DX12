@@ -21,13 +21,13 @@ Application::Application(HINSTANCE hInstance)
 
 Application::~Application()
 {
-    
+
 }
 
-void Application::Initialize(const EngineCreateInfo& ApplicationCI)
+void Application::Initialize(int width, int height)
 {
-    m_Width = ApplicationCI.Width;
-    m_Height = ApplicationCI.Height;
+    m_Width = width;
+    m_Height = height;
     m_Aspect = static_cast<float>(m_Width) / static_cast<float>(m_Height);
     InitialMainWindow();
 
@@ -52,7 +52,7 @@ void Application::Update(float deltaTime)
 
 void Application::Render()
 {
-  
+
 }
 
 LRESULT Application::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -271,5 +271,5 @@ void Application::CalculateFrameStats()
 
 void Application::OnResize()
 {
-   
+
 }

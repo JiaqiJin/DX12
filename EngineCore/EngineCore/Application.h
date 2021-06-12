@@ -2,12 +2,6 @@
 
 #include "Common/GameTimer.h"
 
-struct EngineCreateInfo
-{
-	UINT Width;
-	UINT Height;
-};
-
 class Application
 {
 public:
@@ -16,13 +10,13 @@ public:
 	static Application* Get() { return m_Application; }
 
 	template<typename TSetup>
-	int RunN(const EngineCreateInfo& engineCI, TSetup setup);
+	int Run(int width, int height, TSetup setup);
 
 	bool IsInitialized() { return m_Initialized; }
 	LRESULT MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 private:
-	void Initialize(const EngineCreateInfo& engineCI);
+	void Initialize(int width, int height);
 	void Tick();
 	void Update(float deltaTime);
 	void Render();
@@ -40,14 +34,15 @@ private:
 
 	bool m_Initialized = false;
 
-	//<--------------------------------Windows------------------------------------------>
+	// Window
 	HINSTANCE m_AppInst;
 	HWND m_MainWnd;
-	//<--------------------------------Windows------------------------------------------>
 
+	// Timer
 	GameTimer m_Timer;
 	bool m_Paused = false;
 
+	// Window Parameters
 	UINT m_Width;
 	UINT m_Height;
 	float m_Aspect;
@@ -61,9 +56,9 @@ private:
 };
 
 template<typename TSetup>
-int Application::RunN(const EngineCreateInfo& engineCI, TSetup setup)
+int Application::Run(int width, int height, TSetup setup)
 {
-	Initialize(engineCI);
+	Initialize(width, height);
 	setup();
 
 
