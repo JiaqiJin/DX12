@@ -21,6 +21,8 @@
   <ItemGroup>
     <ClInclude Include="Common\d3dx12.h" />
     <ClInclude Include="Common\Align.h" />
+    <ClInclude Include="Common\GameTimer.h" />
+    <ClInclude Include="Common\Input.h" />
     <ClInclude Include="Core\Color.h" />
     <ClInclude Include="Core\RingBuffer.h" />
     <ClInclude Include="Math\Common.h" />
@@ -73,6 +75,8 @@
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Common\GameTimer.cpp" />
+    <ClCompile Include="Common\Input.cpp" />
     <ClCompile Include="Core\Color.cpp" />
     <ClCompile Include="Core\RingBuffer.cpp" />
     <ClCompile Include="Engine.cpp" />
