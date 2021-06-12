@@ -24,10 +24,10 @@ Application::~Application()
     
 }
 
-void Application::Initialize(const EngineCreateInfo& ApplicationCI)
+void Application::Initialize(int width, int height)
 {
-    m_Width = ApplicationCI.Width;
-    m_Height = ApplicationCI.Height;
+    m_Width = width;
+    m_Height = height;
     m_Aspect = static_cast<float>(m_Width) / static_cast<float>(m_Height);
     InitialMainWindow();
 
