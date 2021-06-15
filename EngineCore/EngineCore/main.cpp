@@ -29,3 +29,6 @@ int main(int argc, const char* argv[])
 	}
 
 }
+
+// https://www.3dgep.com/learning-directx-12-2/#Inline_Descriptors
+// TODO Command Context
