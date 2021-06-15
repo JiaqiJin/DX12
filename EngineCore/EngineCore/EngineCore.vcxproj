@@ -151,7 +151,10 @@
     <ClCompile Include="Common\Color.cpp" />
     <ClCompile Include="Common\GameTimer.cpp" />
     <ClCompile Include="Common\Input.cpp" />
+    <ClCompile Include="D3D12RHI\CommandAllocatorPool.cpp" />
     <ClCompile Include="D3D12RHI\CommandContext.cpp" />
+    <ClCompile Include="D3D12RHI\CommandListManager.cpp" />
+    <ClCompile Include="D3D12RHI\CommandQueue.cpp" />
     <ClCompile Include="D3D12RHI\RenderDevice.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Math\Random.cpp" />
@@ -168,7 +171,10 @@
     <ClInclude Include="Common\d3dx12.h" />
     <ClInclude Include="Common\GameTimer.h" />
     <ClInclude Include="Common\Input.h" />
+    <ClInclude Include="D3D12RHI\CommandAllocatorPool.h" />
     <ClInclude Include="D3D12RHI\CommandContext.h" />
+    <ClInclude Include="D3D12RHI\CommandListManager.h" />
+    <ClInclude Include="D3D12RHI\CommandQueue.h" />
     <ClInclude Include="D3D12RHI\RenderDevice.h" />
     <ClInclude Include="Math\BoundingPlane.h" />
     <ClInclude Include="Math\BoundingSphere.h" />

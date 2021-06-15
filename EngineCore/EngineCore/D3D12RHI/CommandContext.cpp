@@ -1,5 +1,6 @@
 #include "../pch.h"
 #include "CommandContext.h"
+#include "CommandListManager.h"
 
 namespace RHI
 {
@@ -50,7 +51,8 @@ namespace RHI
 
 	void CommandContext::Initialize()
 	{
-		// TODO
+		// Creating the new command list
+		CommandListManager::GetSingleton().CreateNewCommandList(m_Type, m_CommandList.GetAddressOf(), &m_CurrentAllocator);
 	}
 
 	void CommandContext::Reset()
