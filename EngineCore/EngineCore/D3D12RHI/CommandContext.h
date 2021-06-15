@@ -25,7 +25,7 @@ namespace RHI
 	};
 
 	/*
-	* Collection of "CommadList".
+	* Collection of "CommadList" and CommandListAllocator.
 	* Calling Begin function will start recording the commands, 
 	* and call End to push the commands into the CommandQueue.
 	* A new CommandAllocator will be requested at Begin and this allocator will
@@ -41,7 +41,19 @@ namespace RHI
 		CommandContext(const CommandContext&) = delete;
 		CommandContext& operator=(const CommandContext&) = delete;
 
+		// Begin function : creating a command.
 		static CommandContext& Begin(const std::wstring ID = L"");
+
+		GraphicsContext& GetGraphicsContext()
+		{
+			assert(m_Type != D3D12_COMMAND_LIST_TYPE_COMPUTE && "Cannot convert async compute context to graphics");
+			return reinterpret_cast<GraphicsContext&>(*this);
+		}
+
+		ComputeContext& GetComputeContext()
+		{
+			return reinterpret_cast<ComputeContext&>(*this);
+		}
 
 	private:
 		CommandContext(D3D12_COMMAND_LIST_TYPE type);
@@ -62,5 +74,24 @@ namespace RHI
 		ID3D12CommandAllocator* m_CurrentAllocator;
 
 		std::wstring m_ID;
+	};
+
+	// Encapsule the list of commands for rendering (command list for exuction, for setting and clearing the pipeline state). 
+	// https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nn-d3d12-id3d12graphicscommandlist
+	class GraphicsContext : public CommandContext
+	{
+	public:
+		static GraphicsContext& Begin(const std::wstring& ID = L"")
+		{
+			return CommandContext::Begin(ID).GetGraphicsContext();
+		}
+
+		
+	};
+
+	class ComputeContext : public CommandContext
+	{
+	public:
+		
 	};
 }
