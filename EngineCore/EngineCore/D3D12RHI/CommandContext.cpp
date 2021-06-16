@@ -39,9 +39,10 @@ namespace RHI
 
 	CommandContext::CommandContext(D3D12_COMMAND_LIST_TYPE type)
 		: m_Type(type),
-		m_CommandList(nullptr)
+		m_CommandList(nullptr),
+		m_CurrentAllocator(nullptr)
 	{
-
+		// TODO
 	}
 
 	CommandContext::~CommandContext()
@@ -58,11 +59,14 @@ namespace RHI
 	void CommandContext::Reset()
 	{
 		assert(m_CommandList != nullptr && m_CurrentAllocator == nullptr);
-		//m_CommandList->Reset()
+
+		m_CurrentAllocator = CommandListManager::GetSingleton().GetQueue(m_Type).RequestAllocator();
+		m_CommandList->Reset(m_CurrentAllocator, nullptr);
+
 		// TODO
 	}
 
-	CommandContext& CommandContext::Begin(const std::wstring ID = L"")
+	CommandContext& CommandContext::Begin(const std::wstring ID)
 	{
 		CommandContext* newContext = CommandContextManager::GetSingleton().AllocateCommandContext(D3D12_COMMAND_LIST_TYPE_DIRECT);
 		newContext->SetID(ID);

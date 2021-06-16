@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 namespace RHI
 {
@@ -86,7 +86,34 @@ namespace RHI
 			return CommandContext::Begin(ID).GetGraphicsContext();
 		}
 
-		
+		//void ClearColor(D3D12_RECT* Rect = nullptr);
+		//void ClearColor(D3D12_RECT* Rect = nullptr);
+		//void ClearDepth();
+		//void ClearStencil();
+		//void ClearDepthAndStencil();
+
+		//void SetViewport(const D3D12_VIEWPORT& vp);
+		//void SetScissor(const D3D12_RECT& rect);
+		//void SetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY Topology);
+
+		//void SetRenderTargets(UINT NumRTVs);
+
+		//// Vertex Buffer、Index Buffer
+		//void SetVertexBuffer(UINT Slot, const D3D12_VERTEX_BUFFER_VIEW& VBView);
+		//void SetIndexBuffer(const D3D12_INDEX_BUFFER_VIEW& IBView);
+
+		//// Constant Buffer
+		//void SetConstantBuffer(UINT RootIndex, D3D12_GPU_VIRTUAL_ADDRESS BufferAddress);
+
+		//// Descriptor
+		//void SetDescriptorTable(UINT RootIndex, D3D12_GPU_DESCRIPTOR_HANDLE DescriptorTable);
+
+		//void Draw(UINT VertexCount, UINT VertexStartOffset = 0);
+		//void DrawIndexed(UINT IndexCount, UINT StartIndexLocation = 0, INT BaseVertexLocation = 0);
+		//void DrawInstanced(UINT VertexCountPerInstance, UINT InstanceCount,
+		//	UINT StartVertexLocation = 0, UINT StartInstanceLocation = 0);
+		//void DrawIndexedInstanced(UINT IndexCountPerInstance, UINT InstanceCount, UINT StartIndexLocation,
+		//	INT BaseVertexLocation, UINT StartInstanceLocation);
 	};
 
 	class ComputeContext : public CommandContext
