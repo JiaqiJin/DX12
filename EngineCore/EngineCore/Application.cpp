@@ -165,15 +165,15 @@ LRESULT Application::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             return 0;
 
         case WM_KEYDOWN:
-            Input::OnKeyDown(wParam);
+            Input::OnKeyDown((int)wParam);
             return 0;
 
         case WM_KEYUP:
-            if (wParam == VK_ESCAPE)
+            if ((int)wParam == VK_ESCAPE)
             {
                 PostQuitMessage(0);
             }
-            Input::OnKeyUp(wParam);
+            Input::OnKeyUp((int)wParam);
             return 0;
         }
     }
@@ -216,7 +216,7 @@ void Application::InitialMainWindow()
         MessageBox(0, L"RegisterClass Failed.", 0, 0);
     }
 
-    RECT R = { 0, 0, m_Width, m_Height };
+    RECT R = { 0, 0, (LONG)m_Width, (LONG)m_Height };
     AdjustWindowRect(&R, WS_OVERLAPPEDWINDOW, false);
     int width = R.right - R.left;
     int height = R.bottom - R.top;
