@@ -155,6 +155,10 @@
     <ClCompile Include="D3D12RHI\CommandContext.cpp" />
     <ClCompile Include="D3D12RHI\CommandListManager.cpp" />
     <ClCompile Include="D3D12RHI\CommandQueue.cpp" />
+    <ClCompile Include="D3D12RHI\DescriptorHeap.cpp" />
+    <ClCompile Include="D3D12RHI\GpuBuffer.cpp" />
+    <ClCompile Include="D3D12RHI\GpuResource.cpp" />
+    <ClCompile Include="D3D12RHI\GpuResourceDescriptor.cpp" />
     <ClCompile Include="D3D12RHI\RenderDevice.cpp" />
     <ClCompile Include="D3D12RHI\StaleResourceWrapper.cpp" />
     <ClCompile Include="main.cpp" />
@@ -176,6 +180,10 @@
     <ClInclude Include="D3D12RHI\CommandContext.h" />
     <ClInclude Include="D3D12RHI\CommandListManager.h" />
     <ClInclude Include="D3D12RHI\CommandQueue.h" />
+    <ClInclude Include="D3D12RHI\DescriptorHeap.h" />
+    <ClInclude Include="D3D12RHI\GpuBuffer.h" />
+    <ClInclude Include="D3D12RHI\GpuResource.h" />
+    <ClInclude Include="D3D12RHI\GpuResourceDescriptor.h" />
     <ClInclude Include="D3D12RHI\RenderDevice.h" />
     <ClInclude Include="D3D12RHI\StaleResourceWrapper.h" />
     <ClInclude Include="Math\BoundingPlane.h" />
