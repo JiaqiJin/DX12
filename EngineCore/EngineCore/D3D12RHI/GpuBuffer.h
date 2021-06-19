@@ -3,7 +3,7 @@
 #include "GpuResource.h"
 
 // https://docs.microsoft.com/en-us/windows/win32/direct3d12/uploading-resources
-
+// https://docs.microsoft.com/en-us/windows/win32/direct3d12/resource-binding-flow-of-control
 namespace RHI
 {
 	class GpuUploadBuffer;
@@ -88,5 +88,18 @@ namespace RHI
 		{
 			m_pResource->Unmap(0, &CD3DX12_RANGE(begin, std::min(end, m_BufferSize)));
 		}
+	};
+
+	class GpuDynamicBuffer : public GpuBuffer
+	{
+	public:
+		GpuDynamicBuffer(UINT32 numElements, UINT32 elementSize)
+			: GpuBuffer(numElements, elementSize, D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_HEAP_TYPE_UPLOAD)
+		{
+			
+		}
+	protected:
+		// TODO
+		// Dynamic Allocation
 	};
 }
