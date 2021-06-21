@@ -136,44 +136,8 @@ LRESULT Application::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             ((MINMAXINFO*)lParam)->ptMinTrackSize.y = 200;
             return 0;
 
-        case WM_LBUTTONDOWN:
-            Input::m_KeyStates[(int)KeyCode::Mouse0] = KeyState::KeyDown;
-            return 0;
-
-        case WM_MBUTTONDOWN:
-            Input::m_KeyStates[(int)KeyCode::Mouse1] = KeyState::KeyDown;
-            return 0;
-
-        case WM_RBUTTONDOWN:
-            Input::m_KeyStates[(int)KeyCode::Mouse2] = KeyState::KeyDown;
-            return 0;
-
-        case WM_LBUTTONUP:
-            Input::m_KeyStates[(int)KeyCode::Mouse0] = KeyState::KeyUp;
-            return 0;
-
-        case WM_MBUTTONUP:
-            Input::m_KeyStates[(int)KeyCode::Mouse1] = KeyState::KeyUp;
-            return 0;
-
-        case WM_RBUTTONUP:
-            Input::m_KeyStates[(int)KeyCode::Mouse2] = KeyState::KeyUp;
-            return 0;
-
         case WM_MOUSEMOVE:
             Input::OnMouseMove(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-            return 0;
-
-        case WM_KEYDOWN:
-            Input::OnKeyDown((int)wParam);
-            return 0;
-
-        case WM_KEYUP:
-            if ((int)wParam == VK_ESCAPE)
-            {
-                PostQuitMessage(0);
-            }
-            Input::OnKeyUp((int)wParam);
             return 0;
         }
     }
