@@ -67,7 +67,6 @@ enum class KeyState
 
 class Input
 {
-	friend class Application;
 public:
 	static void Update();
 	static bool GetKey(KeyCode keyCode);
@@ -75,9 +74,8 @@ public:
 	static bool GetKeyDown(KeyCode keyCode);
 	static DirectX::XMINT2 GetMousePosition();
 
-private:
-	static void OnKeyUp(int key);
-	static void OnKeyDown(int key);
+	static void UpdateKeyState(KeyCode keyCode, int windowsKeyCode);
+
 	static void OnMouseMove(int x, int y);
 
 private:
