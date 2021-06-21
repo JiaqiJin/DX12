@@ -1,5 +1,7 @@
 #pragma once
 
+#include "VariableSizeAllocationsManager.h"
+
 /*
 * Descriptor are structure (small block of memory) which tell shader where to find the resource, and how interprete data resource(GPU).
 * "Descriptor heap" are chunk of memory (array of Descriptor) where Descriptor are stored. It could be Shader Visible(CBV, UAV, SRV, Sampler),
@@ -153,5 +155,21 @@ namespace RHI
 
 		// Descriptor Increment size, use to find a Descriptor in some Allocation
 		UINT16 m_DescriptorIncrementSize = 0;
+	};
+
+	class DescriptorHeapAllocationManager
+	{
+	public:
+
+	private:
+		IDescriptorAllocator& m_ParentAllocator;
+		RenderDevice& m_RenderDevice;
+
+		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_DescriptorHeap;
+
+		VariableSizeAllocationsManager m_FreeBlockManager;
+
+		D3D12_CPU_DESCRIPTOR_HANDLE m_FirstCPUHandle = { 0 };
+		D3D12_GPU_DESCRIPTOR_HANDLE m_FirstGPUHandle = { 0 };
 	};
 }
