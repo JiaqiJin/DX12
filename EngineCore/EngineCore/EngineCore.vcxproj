@@ -161,6 +161,7 @@
     <ClCompile Include="D3D12RHI\GpuResourceDescriptor.cpp" />
     <ClCompile Include="D3D12RHI\RenderDevice.cpp" />
     <ClCompile Include="D3D12RHI\StaleResourceWrapper.cpp" />
+    <ClCompile Include="D3D12RHI\VariableSizeAllocationsManager.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Math\Random.cpp" />
     <ClCompile Include="pch.cpp" />
@@ -186,6 +187,7 @@
     <ClInclude Include="D3D12RHI\GpuResourceDescriptor.h" />
     <ClInclude Include="D3D12RHI\RenderDevice.h" />
     <ClInclude Include="D3D12RHI\StaleResourceWrapper.h" />
+    <ClInclude Include="D3D12RHI\VariableSizeAllocationsManager.h" />
     <ClInclude Include="Math\BoundingPlane.h" />
     <ClInclude Include="Math\BoundingSphere.h" />
     <ClInclude Include="Math\Common.h" />
