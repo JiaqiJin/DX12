@@ -1,4 +1,7 @@
 ﻿#pragma once
+#include "GpuBuffer.h"
+#include "GpuTexture.h"
+#include "DescriptorHeap.h"
 
 namespace RHI
 {
@@ -54,6 +57,9 @@ namespace RHI
 		{
 			return reinterpret_cast<ComputeContext&>(*this);
 		}
+
+		// Resources Initialization
+		static void InitializeTexture(GpuResource& Dest, UINT NumSubresources, D3D12_SUBRESOURCE_DATA SubData[]);
 
 	private:
 		CommandContext(D3D12_COMMAND_LIST_TYPE type);

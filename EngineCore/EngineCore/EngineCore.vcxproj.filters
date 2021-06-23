@@ -81,6 +81,9 @@
     <ClCompile Include="D3D12RHI\VariableSizeAllocationsManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="D3D12RHI\GpuTexture.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -189,6 +192,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="D3D12RHI\VariableSizeAllocationsManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D12RHI\GpuTexture.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

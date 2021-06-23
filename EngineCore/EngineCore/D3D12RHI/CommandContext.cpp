@@ -73,4 +73,10 @@ namespace RHI
 
 		return *newContext;
 	}
+
+	// Resource Initialization
+	void CommandContext::InitializeTexture(GpuResource& Dest, UINT NumSubresources, D3D12_SUBRESOURCE_DATA SubData[])
+	{
+		// TODO
+	}
 }

@@ -159,6 +159,7 @@
     <ClCompile Include="D3D12RHI\GpuBuffer.cpp" />
     <ClCompile Include="D3D12RHI\GpuResource.cpp" />
     <ClCompile Include="D3D12RHI\GpuResourceDescriptor.cpp" />
+    <ClCompile Include="D3D12RHI\GpuTexture.cpp" />
     <ClCompile Include="D3D12RHI\RenderDevice.cpp" />
     <ClCompile Include="D3D12RHI\StaleResourceWrapper.cpp" />
     <ClCompile Include="D3D12RHI\VariableSizeAllocationsManager.cpp" />
@@ -185,6 +186,7 @@
     <ClInclude Include="D3D12RHI\GpuBuffer.h" />
     <ClInclude Include="D3D12RHI\GpuResource.h" />
     <ClInclude Include="D3D12RHI\GpuResourceDescriptor.h" />
+    <ClInclude Include="D3D12RHI\GpuTexture.h" />
     <ClInclude Include="D3D12RHI\RenderDevice.h" />
     <ClInclude Include="D3D12RHI\StaleResourceWrapper.h" />
     <ClInclude Include="D3D12RHI\VariableSizeAllocationsManager.h" />
