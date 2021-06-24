@@ -33,7 +33,8 @@ namespace RHI
 		m_GpuVirtualAddress = m_pResource->GetGPUVirtualAddress();
 
 		// If initData is provided, the data will uploaded to the upload heap, and then copy to buffer
-		// TODO
+		if (initData != nullptr)
+			CommandContext::InitializeBuffer(*this, initData, m_BufferSize);
 	}
 
 	void GpuBuffer::CreateBufferResource(const GpuUploadBuffer& srcData, UINT32 srcOffset)
@@ -53,7 +54,7 @@ namespace RHI
 		m_GpuVirtualAddress = m_pResource->GetGPUVirtualAddress();
 
 		// If initData is provided, the data will uploaded to the upload heap, and then copy to buffer
-		// TODO
+		CommandContext::InitializeBuffer(*this, srcData, srcOffset);
 	}
 
 	D3D12_VERTEX_BUFFER_VIEW GpuBuffer::CreateVBV(size_t offset, uint32_t size, uint32_t stride) const

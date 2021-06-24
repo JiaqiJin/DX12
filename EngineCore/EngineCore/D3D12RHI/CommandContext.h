@@ -1,4 +1,7 @@
 ﻿#pragma once
+#include "GpuBuffer.h"
+#include "GpuTexture.h"
+#include "DescriptorHeap.h"
 
 namespace RHI
 {
@@ -43,6 +46,7 @@ namespace RHI
 
 		// Begin function : creating a command.
 		static CommandContext& Begin(const std::wstring ID = L"");
+		uint64_t Finish(bool WaitForCompletion = false, bool releaseDynamic = false);
 
 		GraphicsContext& GetGraphicsContext()
 		{
@@ -54,6 +58,14 @@ namespace RHI
 		{
 			return reinterpret_cast<ComputeContext&>(*this);
 		}
+
+		// Resources Initialization
+		static void InitializeBuffer(GpuBuffer& Dest, const void* Data, size_t NumBytes, size_t DestOffset = 0);
+		static void InitializeBuffer(GpuBuffer& Dest, const GpuUploadBuffer& Src, size_t SrcOffset, size_t NumBytes = -1, size_t DestOffset = 0);
+		static void InitializeTexture(GpuResource& Dest, UINT NumSubresources, D3D12_SUBRESOURCE_DATA SubData[]);
+
+		// 
+		void TransitionResource(GpuResource& Resource, D3D12_RESOURCE_STATES NewState, bool FlushImmediate = false);
 
 	private:
 		CommandContext(D3D12_COMMAND_LIST_TYPE type);

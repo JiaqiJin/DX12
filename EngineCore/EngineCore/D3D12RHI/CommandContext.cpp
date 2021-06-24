@@ -73,4 +73,71 @@ namespace RHI
 
 		return *newContext;
 	}
+
+	uint64_t CommandContext::Finish(bool WaitForCompletion, bool releaseDynamic)
+	{
+		assert(m_Type == D3D12_COMMAND_LIST_TYPE_DIRECT || m_Type == D3D12_COMMAND_LIST_TYPE_COMPUTE);
+
+		// TODO
+
+		assert(m_CurrentAllocator != nullptr);
+
+		CommandQueue& Queue = CommandListManager::GetSingleton().GetQueue(m_Type);
+
+		uint64_t FenceValue = Queue.ExecuteCommandList(m_CommandList.Get());
+
+		return  FenceValue;
+	}
+
+
+	// Resource Initialization
+	void CommandContext::InitializeBuffer(GpuBuffer& Dest, const void* Data, size_t NumBytes, size_t DestOffset)
+	{
+		CommandContext& InitContext = CommandContext::Begin();
+
+		// Copy to UploadBuffer, the UploadBuffer here will be automatically released, and SafeRelease will be called in the destructor
+		GpuUploadBuffer uploadBuffer(1, NumBytes);
+		void* dataPtr = uploadBuffer.Map();
+		memcpy(dataPtr, Data, NumBytes);
+
+		InitContext.TransitionResource(Dest, D3D12_RESOURCE_STATE_COPY_DEST, true);
+		InitContext.m_CommandList->CopyBufferRegion(Dest.GetResource(), DestOffset, uploadBuffer.GetResource(), 0, NumBytes);
+		InitContext.TransitionResource(Dest, D3D12_RESOURCE_STATE_GENERIC_READ, true);
+
+		// Excute the Command List and wait it to finish so we can release the upload buffer
+		InitContext.Finish(true);
+	}
+
+	void CommandContext::InitializeBuffer(GpuBuffer& Dest, const GpuUploadBuffer& Src, size_t SrcOffset, size_t NumBytes, size_t DestOffset)
+	{
+		CommandContext& InitContext = CommandContext::Begin();
+
+		size_t MaxBytes = std::min<size_t>(Dest.GetBufferSize() - DestOffset, Src.GetBufferSize() - SrcOffset);
+		NumBytes = std::min<size_t>(MaxBytes, NumBytes);
+
+		InitContext.TransitionResource(Dest, D3D12_RESOURCE_STATE_COPY_DEST, true);
+		InitContext.m_CommandList->CopyBufferRegion(Dest.GetResource(), DestOffset, (ID3D12Resource*)Src.GetResource(), SrcOffset, NumBytes);
+		InitContext.TransitionResource(Dest, D3D12_RESOURCE_STATE_GENERIC_READ, true);
+		// Execute the command list and wait for it to finish so we can release the upload buffer
+		InitContext.Finish(true);
+	}
+
+	void CommandContext::InitializeTexture(GpuResource& Dest, UINT NumSubresources, D3D12_SUBRESOURCE_DATA SubData[])
+	{
+		CommandContext& InitContext = CommandContext::Begin();
+
+		UINT64 uploadBufferSize = GetRequiredIntermediateSize(Dest.GetResource(), 0, NumSubresources);
+		GpuUploadBuffer uploadBuffer(1, uploadBufferSize);
+
+		UpdateSubresources(InitContext.m_CommandList.Get(), Dest.GetResource(), uploadBuffer.GetResource(), 0, 0, NumSubresources, SubData);
+		InitContext.TransitionResource(Dest, D3D12_RESOURCE_STATE_GENERIC_READ);
+
+		// Execute the command list and wait for it to finish so we can release the upload buffer
+		InitContext.Finish(true);
+	}
+
+	void CommandContext::TransitionResource(GpuResource& Resource, D3D12_RESOURCE_STATES NewState, bool FlushImmediate /*= false*/)
+	{
+		// TODO
+	}
 }
