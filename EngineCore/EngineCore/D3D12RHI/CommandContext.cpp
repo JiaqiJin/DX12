@@ -75,6 +75,16 @@ namespace RHI
 	}
 
 	// Resource Initialization
+	void CommandContext::InitializeBuffer(GpuBuffer& Dest, const void* Data, size_t NumBytes, size_t DestOffset)
+	{
+		// TODO
+	}
+
+	void CommandContext::InitializeBuffer(GpuBuffer& Dest, const GpuUploadBuffer& Src, size_t SrcOffset, size_t NumBytes, size_t DestOffset)
+	{
+		// TODO
+	}
+
 	void CommandContext::InitializeTexture(GpuResource& Dest, UINT NumSubresources, D3D12_SUBRESOURCE_DATA SubData[])
 	{
 		// TODO
