@@ -2,6 +2,7 @@
 #include "GpuBuffer.h"
 #include "GpuTexture.h"
 #include "DescriptorHeap.h"
+#include "DynamicResource.h"
 
 namespace RHI
 {
@@ -84,6 +85,12 @@ namespace RHI
 		// D3D12 Command List
 		Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> m_CommandList;
 		ID3D12CommandAllocator* m_CurrentAllocator;
+
+		// Dynamic Descriptor
+		DynamicSuballocationsManager m_DynamicGPUDescriptorAllocator;
+
+		// Dynamic Resource
+		DynamicResourceHeap m_DynamicResourceHeap;
 
 		std::wstring m_ID;
 	};
