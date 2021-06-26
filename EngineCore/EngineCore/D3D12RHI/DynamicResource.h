@@ -1,5 +1,8 @@
 #pragma once
 
+// https://github.com/DiligentGraphics/DiligentCore/blob/master/Graphics/GraphicsEngineD3D12/include/D3D12DynamicHeap.hpp
+// http://diligentgraphics.com/2016/04/20/implementing-dynamic-resources-with-direct3d12/
+
 namespace RHI
 {
 	// Indicates a dynamic allocation, recording the ID3D12Resource to which it belongs, 
@@ -94,11 +97,47 @@ namespace RHI
 		std::multimap<UINT64/*Page Size*/, D3D12DynamicPage, std::less<UINT64>> m_AvailablePages;
 	};
 
+	// Dynamic resource
 	class DynamicResourceHeap
 	{
 	public:
+		DynamicResourceHeap(DynamicResourceAllocator& DynamicMemAllocator, UINT64 PageSize): 
+			m_GlobalDynamicAllocator{ DynamicMemAllocator },
+			m_BasePageSize{ PageSize } {  }
 
+		DynamicResourceHeap(const DynamicResourceHeap&) = delete;
+		DynamicResourceHeap(DynamicResourceHeap&&) = delete;
+		DynamicResourceHeap& operator= (const DynamicResourceHeap&) = delete;
+		DynamicResourceHeap& operator= (DynamicResourceHeap&&) = delete;
+
+		~DynamicResourceHeap();
+
+		D3D12DynamicAllocation Allocate(UINT64 SizeInByte, UINT64 Alignment);
+
+		void ReleaseAllocatedPages();
+
+		static constexpr UINT64 InvalidOffset = static_cast<UINT64>(-1);
 	private:
+		DynamicResourceAllocator& m_GlobalDynamicAllocator;
 
+		// Allocated smallest page size, if the size is not enougth, incresed by 2
+		const UINT64 m_BasePageSize;
+
+		std::vector<D3D12DynamicPage> m_AllocatedPages;
+
+		// Offset allocated in current Page
+		UINT64 m_CurrOffset = InvalidOffset;
+		// The remaining capacity of the current Page
+		UINT64 m_AvailableSize = 0;
+		// allocated size
+		UINT64 m_CurrAllocatedSize = 0;
+		// used size
+		UINT64 m_CurrUsedSize = 0;
+		// Aligned size
+		UINT64 m_CurrUsedAlignedSize = 0;
+		UINT64 m_PeakAllocatedSize = 0;
+		// peak
+		UINT64 m_PeakUsedSize = 0;
+		UINT64 m_PeakAlignedSize = 0;
 	};
 }

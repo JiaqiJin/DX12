@@ -114,4 +114,76 @@ namespace RHI
     {
         assert(m_AvailablePages.empty() && "Not all pages are destroyed. Dynamic memory manager must be explicitly destroyed with Destroy() method");
     }
+
+    // ------------------- Dynamic Resource Heap -----------------------------
+
+    DynamicResourceHeap::~DynamicResourceHeap()
+    {
+        assert(m_AllocatedPages.empty() && "Allocated pages have not been released which indicates FinishFrame() has not been called");
+    }
+
+    D3D12DynamicAllocation DynamicResourceHeap::Allocate(UINT64 SizeInBytes, UINT64 Alignment)
+    {
+        assert(Alignment > 0);
+        assert(IsPowerOfTwoD(Alignment) && "Alignment must be power of 2");
+
+        // If it is the first allocation, or the size of the current Page is not enough for this allocation, create a Page
+        if (m_CurrOffset == InvalidOffset || SizeInBytes + (Align(m_CurrOffset, Alignment) - m_CurrOffset) > m_AvailableSize)
+        {
+            auto NewPageSize = m_BasePageSize;
+            while (NewPageSize < SizeInBytes)
+                NewPageSize *= 2;
+
+            auto NewPage = m_GlobalDynamicAllocator.AllocatePage(NewPageSize);
+            if (NewPage.IsValid())
+            {
+                m_CurrOffset = 0;
+                m_AvailableSize = NewPage.GetSize();
+
+                m_CurrAllocatedSize += m_AvailableSize;
+                m_PeakAllocatedSize = std::max(m_PeakAllocatedSize, m_CurrAllocatedSize);
+
+                m_AllocatedPages.emplace_back(std::move(NewPage));
+            }
+        }
+
+        if (m_CurrOffset != InvalidOffset && SizeInBytes + (Align(m_CurrOffset, Alignment) - m_CurrOffset) <= m_AvailableSize)
+        {
+            auto AlignedOffset = Align(m_CurrOffset, Alignment);
+            auto AdjustedSize = SizeInBytes + (AlignedOffset - m_CurrOffset);
+            assert(AdjustedSize <= m_AvailableSize);
+            m_AvailableSize -= AdjustedSize;
+            m_CurrOffset += AdjustedSize;
+
+            m_CurrUsedSize += SizeInBytes;
+            m_PeakUsedSize = std::max(m_PeakUsedSize, m_CurrUsedSize);
+
+            m_CurrUsedAlignedSize += AdjustedSize;
+            m_PeakAlignedSize = std::max(m_PeakAlignedSize, m_CurrUsedAlignedSize);
+
+            auto& CurrPage = m_AllocatedPages.back();
+            return D3D12DynamicAllocation
+            {
+                CurrPage.GetD3D12Buffer(),
+                AlignedOffset,
+                SizeInBytes,
+                CurrPage.GetCPUAddress(AlignedOffset),
+                CurrPage.GetGPUAddress(AlignedOffset)
+            };
+        }
+        else
+            return D3D12DynamicAllocation{};
+    }
+
+    void DynamicResourceHeap::ReleaseAllocatedPages()
+    {
+        m_GlobalDynamicAllocator.ReleasePages(m_AllocatedPages);
+        m_AllocatedPages.clear();
+
+        m_CurrOffset = InvalidOffset;
+        m_AvailableSize = 0;
+        m_CurrAllocatedSize = 0;
+        m_CurrUsedSize = 0;
+        m_CurrUsedAlignedSize = 0;
+    }
 }
