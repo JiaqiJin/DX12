@@ -72,7 +72,7 @@ namespace RHI
 		return CreateVBV(offset, (uint32_t)(m_BufferSize - offset), m_ElementSize);
 	}
 
-	D3D12_INDEX_BUFFER_VIEW GpuBuffer::CreateIBV(size_t offset, uint32_t size, bool b32Bit = false) const
+	D3D12_INDEX_BUFFER_VIEW GpuBuffer::CreateIBV(size_t offset, uint32_t size, bool b32Bit /*= false*/) const
 	{
 		D3D12_INDEX_BUFFER_VIEW IBView = {};
 		IBView.BufferLocation = m_GpuVirtualAddress + offset;
