@@ -3,6 +3,7 @@
 #include "CommandQueue.h"
 #include "StaleResourceWrapper.h"
 #include "CommandListManager.h"
+#include "DynamicResource.h"
 
 namespace RHI
 {
@@ -26,9 +27,12 @@ namespace RHI
 		// Gettes
 		ID3D12Device* GetD3D12Device() { return m_D3D12Device.Get(); }
 		GPUDescriptorHeap& GetGPUDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE Type);
+		DynamicResourceAllocator& GetDynamicResourceAllocator() { return m_DynamicResAllocator; }
 
 	private:
 		Microsoft::WRL::ComPtr<ID3D12Device> m_D3D12Device;
+
+		DynamicResourceAllocator m_DynamicResAllocator;
 
 		// Four descriptor heap object, corresponding to the 4 descriptor heap type
 		// [CBV_SRV_UAV][Sample][RTV][DSV] 

@@ -366,7 +366,7 @@ namespace RHI
 	private:
 		DescriptorHeapAllocation AllocateDynamic(UINT32 count)
 		{
-			m_DynamicAllocationsManager.Allocate(count);
+			return m_DynamicAllocationsManager.Allocate(count);
 		}
 
 		RenderDevice& m_RenderDevice;

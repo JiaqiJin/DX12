@@ -1,6 +1,7 @@
-#include "../pch.h"
+﻿#include "../pch.h"
 #include "CommandContext.h"
 #include "CommandListManager.h"
+#include "RenderDevice.h"
 
 namespace RHI
 {
@@ -40,14 +41,17 @@ namespace RHI
 	CommandContext::CommandContext(D3D12_COMMAND_LIST_TYPE type)
 		: m_Type(type),
 		m_CommandList(nullptr),
-		m_CurrentAllocator(nullptr)
+		m_CurrentAllocator(nullptr),
+		m_DynamicGPUDescriptorAllocator(RenderDevice::GetSingleton().GetGPUDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV), 128, "DynamicDescriptorMgr"),
+		m_DynamicResourceHeap(RenderDevice::GetSingleton().GetDynamicResourceAllocator(), DYNAMIC_RESOURCE_PAGE_SIZE)
 	{
-		// TODO
+		
 	}
 
 	CommandContext::~CommandContext()
 	{
-		// TODO
+		m_DynamicGPUDescriptorAllocator.ReleaseAllocations();
+		m_DynamicResourceHeap.ReleaseAllocatedPages();
 	}
 
 	void CommandContext::Initialize()
@@ -78,15 +82,34 @@ namespace RHI
 	{
 		assert(m_Type == D3D12_COMMAND_LIST_TYPE_DIRECT || m_Type == D3D12_COMMAND_LIST_TYPE_COMPUTE);
 
-		// TODO
+		FlushResourceBarriers();
 
 		assert(m_CurrentAllocator != nullptr);
 
 		CommandQueue& Queue = CommandListManager::GetSingleton().GetQueue(m_Type);
 
-		uint64_t FenceValue = Queue.ExecuteCommandList(m_CommandList.Get());
+		// Clean Release Queue
+		RenderDevice::GetSingleton().PurgeReleaseQueue(false);
 
-		return  FenceValue;
+		// Release dynamic resources at the end of each frame
+		if (releaseDynamic)
+		{
+			m_DynamicGPUDescriptorAllocator.ReleaseAllocations();
+
+			m_DynamicResourceHeap.ReleaseAllocatedPages();
+		}
+
+		uint64_t FenceValue = Queue.ExecuteCommandList(m_CommandList.Get());
+		Queue.DiscardAllocator(FenceValue, m_CurrentAllocator);
+		m_CurrentAllocator = nullptr;
+
+
+		if (WaitForCompletion)
+			CommandListManager::GetSingleton().WaitForFence(FenceValue, m_Type);
+
+		CommandContextManager::GetSingleton().FreeCommandContext(this);
+
+		return FenceValue;
 	}
 
 
@@ -96,7 +119,7 @@ namespace RHI
 		CommandContext& InitContext = CommandContext::Begin();
 
 		// Copy to UploadBuffer, the UploadBuffer here will be automatically released, and SafeRelease will be called in the destructor
-		GpuUploadBuffer uploadBuffer(1, NumBytes);
+		GpuUploadBuffer uploadBuffer(1, (UINT32)NumBytes);
 		void* dataPtr = uploadBuffer.Map();
 		memcpy(dataPtr, Data, NumBytes);
 
@@ -127,7 +150,7 @@ namespace RHI
 		CommandContext& InitContext = CommandContext::Begin();
 
 		UINT64 uploadBufferSize = GetRequiredIntermediateSize(Dest.GetResource(), 0, NumSubresources);
-		GpuUploadBuffer uploadBuffer(1, uploadBufferSize);
+		GpuUploadBuffer uploadBuffer(1, (UINT32)uploadBufferSize);
 
 		UpdateSubresources(InitContext.m_CommandList.Get(), Dest.GetResource(), uploadBuffer.GetResource(), 0, 0, NumSubresources, SubData);
 		InitContext.TransitionResource(Dest, D3D12_RESOURCE_STATE_GENERIC_READ);
@@ -137,6 +160,11 @@ namespace RHI
 	}
 
 	void CommandContext::TransitionResource(GpuResource& Resource, D3D12_RESOURCE_STATES NewState, bool FlushImmediate /*= false*/)
+	{
+		// TODO
+	}
+
+	void CommandContext::FlushResourceBarriers()
 	{
 		// TODO
 	}

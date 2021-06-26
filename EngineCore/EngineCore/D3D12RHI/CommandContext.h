@@ -67,6 +67,7 @@ namespace RHI
 
 		// 
 		void TransitionResource(GpuResource& Resource, D3D12_RESOURCE_STATES NewState, bool FlushImmediate = false);
+		inline void FlushResourceBarriers(void);
 
 	private:
 		CommandContext(D3D12_COMMAND_LIST_TYPE type);

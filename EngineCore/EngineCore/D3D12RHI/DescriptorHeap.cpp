@@ -68,10 +68,12 @@ namespace RHI
 		if (!allocation.IsValid())
 			return DescriptorHeapAllocation();
 
+		assert(allocation.size == count);
+
 		// Compute the first CPU and GPU descriptor handles in the allocation by
 		// offseting the first CPU and GPU descriptor handle in the range
 		auto CPUHandle = m_FirstCPUHandle;
-		CPUHandle.ptr += m_DescriptorIncrementSize * allocation.unalignedOffset;
+		CPUHandle.ptr += allocation.unalignedOffset * m_DescriptorIncrementSize;
 
 		auto GPUHandle = m_FirstGPUHandle;
 		GPUHandle.ptr += allocation.unalignedOffset * m_DescriptorIncrementSize;
@@ -211,7 +213,7 @@ namespace RHI
 		m_AvailableHeaps.insert(managerID);
 	}
 
-	// ---------------------------- GPU DESCRIPTOR HEPA -------------------------
+	// ---------------------------- GPU DESCRIPTOR HEAP -------------------------
 	GPUDescriptorHeap::GPUDescriptorHeap(RenderDevice& renderDevice,
 		UINT32 numDescriptorsInHeap,
 		UINT32 numDynamicDescriptors,

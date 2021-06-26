@@ -348,7 +348,7 @@ namespace RHI
 
 	 // ---------------------- Color Texture ---------------------------
 	GpuRenderTextureColor::GpuRenderTextureColor(ID3D12Resource* resource, D3D12_RESOURCE_DESC desc, Color clearColor)
-		: GpuTexture(desc.Width, desc.Height, D3D12_RESOURCE_DIMENSION_TEXTURE2D, desc.Format),
+		: GpuTexture((UINT32)desc.Width, (UINT32)desc.Height, D3D12_RESOURCE_DIMENSION_TEXTURE2D, desc.Format),
 		m_ClearColor(clearColor)
 	{
 		m_UsageState = D3D12_RESOURCE_STATE_PRESENT;
