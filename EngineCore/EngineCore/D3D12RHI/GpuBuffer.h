@@ -1,6 +1,7 @@
 #pragma once
 
 #include "GpuResource.h"
+#include "DynamicResource.h"
 
 // https://docs.microsoft.com/en-us/windows/win32/direct3d12/uploading-resources
 // https://docs.microsoft.com/en-us/windows/win32/direct3d12/resource-binding-flow-of-control
@@ -93,13 +94,17 @@ namespace RHI
 	class GpuDynamicBuffer : public GpuBuffer
 	{
 	public:
-		GpuDynamicBuffer(UINT32 numElements, UINT32 elementSize)
-			: GpuBuffer(numElements, elementSize, D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_HEAP_TYPE_UPLOAD)
+		GpuDynamicBuffer(UINT32 NumElements, UINT32 ElementSize) :
+			GpuBuffer(NumElements, ElementSize, D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_HEAP_TYPE_UPLOAD)
 		{
-			
+
 		}
+
+		virtual D3D12_GPU_VIRTUAL_ADDRESS GetGpuVirtualAddress() const override;
+
+		void* Map(CommandContext& cmdContext, size_t alignment);
 	protected:
-		// TODO
-		// Dynamic Allocation
+
+		D3D12DynamicAllocation m_DynamicData;
 	};
 }

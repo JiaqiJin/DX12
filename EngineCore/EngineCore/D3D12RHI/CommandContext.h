@@ -69,6 +69,8 @@ namespace RHI
 		void TransitionResource(GpuResource& Resource, D3D12_RESOURCE_STATES NewState, bool FlushImmediate = false);
 		inline void FlushResourceBarriers(void);
 
+		// Dynamic resource Allocate
+		D3D12DynamicAllocation AllocateDynamicSpace(size_t NumBytes, size_t Alignment);
 	private:
 		CommandContext(D3D12_COMMAND_LIST_TYPE type);
 

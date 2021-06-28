@@ -4,6 +4,11 @@ namespace RHI
 {
 	class RenderDevice;
 
+	class RootParameter
+	{
+
+	};
+
 	class RootSignature
 	{
 	public:

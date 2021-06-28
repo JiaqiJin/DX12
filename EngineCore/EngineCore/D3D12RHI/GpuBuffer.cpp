@@ -108,4 +108,15 @@ namespace RHI
 
 		return Desc;
 	}
+
+	D3D12_GPU_VIRTUAL_ADDRESS GpuDynamicBuffer::GetGpuVirtualAddress() const
+	{
+		return m_DynamicData.GPUAddress;
+	}
+
+	void* GpuDynamicBuffer::Map(CommandContext& cmdContext, size_t alignment)
+	{
+		m_DynamicData = cmdContext.AllocateDynamicSpace(m_BufferSize, alignment);
+		return m_DynamicData.CPUAddress;
+	}
 }

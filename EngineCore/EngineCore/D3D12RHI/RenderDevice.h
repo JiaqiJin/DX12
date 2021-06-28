@@ -1,9 +1,9 @@
 #pragma once
 #include "DescriptorHeap.h"
 #include "CommandQueue.h"
-#include "StaleResourceWrapper.h"
 #include "CommandListManager.h"
 #include "DynamicResource.h"
+#include "../Common/StaleResourceWrapper.h"
 
 namespace RHI
 {
