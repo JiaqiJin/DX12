@@ -63,7 +63,7 @@
     <ClCompile Include="D3D12RHI\CommandQueue.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="D3D12RHI\StaleResourceWrapper.cpp">
+    <ClCompile Include="Common\StaleResourceWrapper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="D3D12RHI\GpuResource.cpp">
@@ -91,6 +91,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="D3D12RHI\RootSignature.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D12RHI\Shader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D12RHI\ShaderObject\ShaderResource.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -185,7 +191,7 @@
     <ClInclude Include="D3D12RHI\CommandQueue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="D3D12RHI\StaleResourceWrapper.h">
+    <ClInclude Include="Common\StaleResourceWrapper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="D3D12RHI\GpuResource.h">
@@ -219,6 +225,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="D3D12RHI\RootSignature.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D12RHI\Shader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D12RHI\ShaderObject\ShaderResource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

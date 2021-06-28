@@ -164,7 +164,9 @@
     <ClCompile Include="D3D12RHI\PipelineState.cpp" />
     <ClCompile Include="D3D12RHI\RenderDevice.cpp" />
     <ClCompile Include="D3D12RHI\RootSignature.cpp" />
-    <ClCompile Include="D3D12RHI\StaleResourceWrapper.cpp" />
+    <ClCompile Include="D3D12RHI\Shader.cpp" />
+    <ClCompile Include="D3D12RHI\ShaderObject\ShaderResource.cpp" />
+    <ClCompile Include="Common\StaleResourceWrapper.cpp" />
     <ClCompile Include="D3D12RHI\VariableSizeAllocationsManager.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Math\Random.cpp" />
@@ -196,7 +198,9 @@
     <ClInclude Include="D3D12RHI\PipelineState.h" />
     <ClInclude Include="D3D12RHI\RenderDevice.h" />
     <ClInclude Include="D3D12RHI\RootSignature.h" />
-    <ClInclude Include="D3D12RHI\StaleResourceWrapper.h" />
+    <ClInclude Include="D3D12RHI\Shader.h" />
+    <ClInclude Include="D3D12RHI\ShaderObject\ShaderResource.h" />
+    <ClInclude Include="Common\StaleResourceWrapper.h" />
     <ClInclude Include="D3D12RHI\VariableSizeAllocationsManager.h" />
     <ClInclude Include="Math\BoundingPlane.h" />
     <ClInclude Include="Math\BoundingSphere.h" />
