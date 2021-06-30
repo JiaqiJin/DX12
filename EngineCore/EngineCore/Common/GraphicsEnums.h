@@ -18,6 +18,37 @@ namespace RHI
 		SHADER_TYPE_LAST = SHADER_TYPE_MESH
 	};
 
+	enum SHADER_RESOURCE_VARIABLE_TYPE
+	{
+		/// Shader resource bound to the variable is the same for all SRB instances.
+		/// It must be set *once* directly through Pipeline State object.
+		SHADER_RESOURCE_VARIABLE_TYPE_STATIC = 0,
+
+		/// Shader resource bound to the variable is specific to the shader resource binding
+		/// instance (see Diligent::IShaderResourceBinding). It must be set *once* through
+		/// Diligent::IShaderResourceBinding interface. It cannot be set through Diligent::IPipelineState
+		/// interface and cannot be change once bound.
+		SHADER_RESOURCE_VARIABLE_TYPE_MUTABLE,
+
+		/// Shader variable binding is dynamic. It can be set multiple times for every instance of shader resource
+		/// binding (see Diligent::IShaderResourceBinding). It cannot be set through Diligent::IPipelineState interface.
+		SHADER_RESOURCE_VARIABLE_TYPE_DYNAMIC,
+
+		/// Total number of shader variable types
+		SHADER_RESOURCE_VARIABLE_TYPE_NUM_TYPES
+	};
+
+	enum class BindingResourceType
+	{
+		Unknown = -1,
+		CBV = 0,
+		TexSRV,
+		BufSRV,
+		TexUAV,
+		BufUAV,
+		Sampler,
+		NumTypes
+	};
 
 	enum PIPELINE_TYPE
 	{

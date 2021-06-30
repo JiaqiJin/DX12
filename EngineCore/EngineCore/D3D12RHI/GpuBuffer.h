@@ -32,6 +32,9 @@ namespace RHI
 		D3D12_INDEX_BUFFER_VIEW CreateIBV(size_t offset, uint32_t size, bool b32Bit = false) const;
 		D3D12_INDEX_BUFFER_VIEW CreateIBV(size_t startIndex = 0) const;
 		
+		virtual std::shared_ptr<GpuResourceDescriptor> CreateSRV();
+		virtual std::shared_ptr<GpuResourceDescriptor> CreateUAV();
+
 		// Getters
 		UINT64 GetBufferSize() const { return m_BufferSize; }
 		UINT32 GetElementCount() const { return m_ElementCount; }
