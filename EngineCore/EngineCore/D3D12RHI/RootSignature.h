@@ -261,9 +261,90 @@ namespace RHI
 		~RootSignature();
 
 		ID3D12RootSignature* GetD3D12RootSignature() const { return m_pd3d12RootSignature.Get(); }
+
+    private:
+        // Class to help manage RootParam
+        // The class contains two arrays: root tables and root views
+        class RootParamsManager
+        {
+        public:
+            UINT32 GetRootTableNum() const { return m_RootTables.size(); }
+            UINT32 GetRootDescriptorNum() const { return m_RootDescriptors.size(); }
+
+            const RootParameter& GetRootTable(UINT32 tableIndex) const
+            {
+                assert(tableIndex < m_RootTables.size());
+                return m_RootTables[tableIndex];
+            }
+
+            RootParameter& GetRootTable(UINT32 tableIndex)
+            {
+                assert(tableIndex < m_RootTables.size());
+                return m_RootTables[tableIndex];
+            }
+
+            const RootParameter& GetRootDescriptor(UINT32 descriptorIndex) const
+            {
+                assert(descriptorIndex < m_RootDescriptors.size());
+                return m_RootDescriptors[descriptorIndex];
+            }
+
+            RootParameter& GetRootDescriptor(UINT32 descriptorIndex)
+            {
+                assert(descriptorIndex < m_RootDescriptors.size());
+                return m_RootDescriptors[descriptorIndex];
+            }
+
+            // Adding a new Root View
+            void AddRootDescriptor(D3D12_ROOT_PARAMETER_TYPE     ParameterType,
+                UINT32                        RootIndex,
+                UINT                          Register,
+                D3D12_SHADER_VISIBILITY       Visibility,
+                SHADER_RESOURCE_VARIABLE_TYPE VarType);
+            // Adding a new Root Table
+            void AddRootTable(UINT32          RootIndex,
+                D3D12_SHADER_VISIBILITY       Visibility,
+                SHADER_RESOURCE_VARIABLE_TYPE VarType,
+                UINT32                        NumRangesInNewTable = 1);
+            // Adding a new Descriptor Ranger In the existing Root Table
+            void AddDescriptorRanges(UINT32 RootTableInd, UINT32 NumExtraRanges = 1);
+
+            template <typename TOperation>
+            void ProcessRootDescriptors(TOperation) const;
+
+            template <typename TOperation>
+            void ProcessRootTables(TOperation) const;
+
+            bool   operator==(const RootParamsManager& RootParams) const;
+            size_t GetHash() const;
+        private:
+            std::vector<RootParameter> m_RootTables;
+            std::vector<RootParameter> m_RootDescriptors;
+        }; // -- End of RootParamsManager class --
+
 	private:
 		// Root Signature
 		Microsoft::WRL::ComPtr<ID3D12RootSignature> m_pd3d12RootSignature;
 		RenderDevice* m_RenderDevice;
 	};
+
+    template <typename TOperation>
+    void RootSignature::RootParamsManager::ProcessRootDescriptors(TOperation Operation) const
+    {
+        for (UINT32 i = 0; i < m_RootDescriptors.size(); ++i)
+        {
+            const RootParameter& rootView = m_RootDescriptors[i];
+            Operation(m_RootDescriptors[i]);
+        }
+    }
+
+    template <typename TOperation>
+    void RootSignature::RootParamsManager::ProcessRootTables(TOperation Operation) const
+    {
+        for (UINT32 i = 0; i < m_RootTables.size(); ++i)
+        {
+            const RootParameter& rootTable = m_RootTables[i];
+            Operation(m_RootTables[i]);
+        }
+    }
 }
