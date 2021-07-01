@@ -168,4 +168,10 @@ namespace RHI
 	{
 		// TODO
 	}
+
+	D3D12DynamicAllocation CommandContext::AllocateDynamicSpace(size_t NumBytes, size_t Alignment)
+	{
+		return m_DynamicResourceHeap.Allocate(NumBytes, Alignment);
+	}
+
 }

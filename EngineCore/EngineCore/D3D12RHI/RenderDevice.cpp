@@ -1,7 +1,6 @@
 #include "../pch.h"
 #include "RenderDevice.h"
 
-
 namespace RHI
 {
 	RenderDevice::RenderDevice(ID3D12Device* d3d12Device) :
