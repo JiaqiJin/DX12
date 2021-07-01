@@ -262,6 +262,39 @@ namespace RHI
 
 		ID3D12RootSignature* GetD3D12RootSignature() const { return m_pd3d12RootSignature.Get(); }
 
+        // Complete the construction of Root Signature and create Root Signature of Direct3D 12
+        void Finalize(ID3D12Device* pd3d12Device);
+
+        // Allocated for each ShaderResource in the Shader
+        // TODO
+
+        // The total number of all Descriptors in the RootTable of VarType type
+        UINT32 GetNumDescriptorInRootTable(SHADER_RESOURCE_VARIABLE_TYPE VarType) const
+        {
+            return m_NumDescriptorInRootTable[VarType];
+        }
+
+        // The number of RootView of VarType type
+        UINT32 GetNumRootDescriptor(SHADER_RESOURCE_VARIABLE_TYPE VarType) const
+        {
+            return m_NumRootDescriptor[VarType];
+        }
+
+        template <typename TOperation>
+        void ProcessRootDescriptors(TOperation Operation) const
+        {
+            m_RootParams.ProcessRootDescriptors(Operation);
+        }
+
+		template <typename TOperation>
+		void ProcessRootTables(TOperation Operation) const
+		{
+            m_RootParams.ProcessRootTables(Operation);
+		}
+		
+    private:
+        std::array<const CD3DX12_STATIC_SAMPLER_DESC, 7> GetStaticSamplers();
+
     private:
         // Class to help manage RootParam
         // The class contains two arrays: root tables and root views
@@ -326,6 +359,28 @@ namespace RHI
 		// Root Signature
 		Microsoft::WRL::ComPtr<ID3D12RootSignature> m_pd3d12RootSignature;
 		RenderDevice* m_RenderDevice;
+        // RootParameter includes Root View and Root Table, which are stored in two Vectors respectively,
+        // When constructing RootParameter, it is processed in the order of declaration in Shader,
+        // and RootIndex is also in the order of declaration
+        // CBV is saved as RootView, others are grouped according to update frequency, Static, Mutable, 
+        // and Dynamic are saved as three groups of Root Tables, 
+        // and different Shaders are saved separately, so the maximum number of Root Tables is: Shader number x 3
+        // The m_SrvCbvUavRootTablesMap below stores the index of the Root Table of the specified Shader stage 
+        // and the specified Shader Variable type in the m_RootTables above (not the Root Index)
+        // Used to determine whether a RootTable of a Variable Type of a Shader has been created. 
+        // If it has been created, add the Descriptor Range to the Root Table. If it is not created, create a new Root Table.
+        RootParamsManager m_RootParams;
+
+        // Record the total number of Descriptors of all RootTables of each Variable type
+        std::array<UINT32, SHADER_RESOURCE_VARIABLE_TYPE_NUM_TYPES> m_NumDescriptorInRootTable = {};
+        // Record the number of all RootDescriptor of each Variable type
+        std::array<UINT32, SHADER_RESOURCE_VARIABLE_TYPE_NUM_TYPES> m_NumRootDescriptor = {};
+
+        static constexpr UINT8 InvalidRootTableIndex = static_cast<UINT8>(-1);
+
+        // Keeps root table array index(not the root index) of a table in CBV / SRV / UAV descriptor heap, 
+        // for every shader variable typeand every shader stage
+        std::array<UINT8, SHADER_RESOURCE_VARIABLE_TYPE_NUM_TYPES * MAX_SHADERS_IN_PIPELINE> m_SrvCbvUavRootTablesMap = {};
 	};
 
     template <typename TOperation>
