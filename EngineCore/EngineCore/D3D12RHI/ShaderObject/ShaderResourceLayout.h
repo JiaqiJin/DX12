@@ -78,6 +78,44 @@ namespace RHI
 	class ShaderResourceLayout
 	{
 	public:
+		ShaderResourceLayout(ID3D12Device* pd3d12Device,
+			PIPELINE_TYPE pipelineType,
+			const ShaderVariableConfig& shaderVariableConfig,
+			const ShaderResource* shaderResource,
+			RootSignature* rootSignature);
+		
+		// Represents a resource in Shader, and contains two additional information RootIndex and OffsetFromTable
+		struct Resource
+		{
+		public:
+			Resource(const ShaderResourceAttribs& _Attribs,
+				SHADER_RESOURCE_VARIABLE_TYPE    _VariableType,
+				BindingResourceType               _ResType,
+				UINT32                           _RootIndex,
+				UINT32                           _OffsetFromTableStart) noexcept :
+				Attribs{ _Attribs },
+				ResourceType{ _ResType },
+				VariableType{ _VariableType },
+				RootIndex{ static_cast<UINT16>(_RootIndex) },
+				OffsetFromTableStart{ _OffsetFromTableStart }
+			{
+
+			}
+
+			bool IsBound();
+
+			Resource(const Resource&) = delete;
+			Resource(Resource&&) = delete;
+			Resource& operator = (const Resource&) = delete;
+			Resource& operator = (Resource&&) = delete;
+
+			// Variables
+			const SHADER_RESOURCE_VARIABLE_TYPE VariableType;   // Static, Mutable, Dynamic
+			const ShaderResourceAttribs& Attribs; // Corresponding to a resource in ShaderResource
+			const BindingResourceType ResourceType;  // CBV, TexSRV, BufSRV, TexUAV, BufUAV, Sampler
+			const UINT32 RootIndex;
+			const UINT32 OffsetFromTableStart;
+		};
 
 	private:
 		ID3D12Device* m_D3D12Device;
