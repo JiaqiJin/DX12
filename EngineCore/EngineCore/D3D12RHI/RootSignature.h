@@ -301,8 +301,8 @@ namespace RHI
         class RootParamsManager
         {
         public:
-            UINT32 GetRootTableNum() const { return m_RootTables.size(); }
-            UINT32 GetRootDescriptorNum() const { return m_RootDescriptors.size(); }
+            UINT32 GetRootTableNum() const { return (UINT32)m_RootTables.size(); }
+            UINT32 GetRootDescriptorNum() const { return (UINT32)m_RootDescriptors.size(); }
 
             const RootParameter& GetRootTable(UINT32 tableIndex) const
             {
