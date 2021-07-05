@@ -1,4 +1,4 @@
-#include "../../pch.h"
+﻿#include "../../pch.h"
 #include "ShaderResource.h"
 #include "../Shader.h"
 
@@ -18,8 +18,107 @@ namespace RHI
 
 		m_ShaderVersion = DXshaderDesc.Version;
 
-		// TODO
+		// Record every resource used by Shader
+		UINT skipCount = 1;
+		for (UINT i = 0; i < DXshaderDesc.BoundResources; i += skipCount)
+		{
+			D3D12_SHADER_INPUT_BIND_DESC bindingDesc = {};
+			pShaderReflection->GetResourceBindingDesc(i, &bindingDesc);
 
+			std::string name = bindingDesc.Name;
+
+			UINT bindCount = bindingDesc.BindCount;
+
+			// Process the array
+			// In Shader Model 5_0 and previous versions, each array resource is listed separately.
+			// For example, the following texture array is defined in Shader:
+			//
+			// Texture2D<float3> g_tex2DDiffuse[4];
+			//
+			// The Shader reflection system will enumerate four resources with the following names:
+			// "g_tex2DDiffuse[0]"
+			// "g_tex2DDiffuse[1]"
+			// "g_tex2DDiffuse[2]"
+			// "g_tex2DDiffuse[3]"
+			//
+			// If some of the elements of the array resource are not used by the Shader, they will not be listed
+			auto openBracketPos = name.find('[');
+			if (-1 != openBracketPos)
+			{
+				assert((bindCount == 1) && "When array elements are enumerated individually, BindCount is expected to always be 1");
+
+				// Name == "g_tex2DDiffuse[0]"
+				//                        ^
+				//                   OpenBracketPos
+				// Name without parentheses
+				name.erase(openBracketPos, name.length() - openBracketPos);
+				// Name == "g_tex2DDiffuse"
+
+				for (UINT j = i + 1; j < DXshaderDesc.BoundResources; ++j)
+				{
+					D3D12_SHADER_INPUT_BIND_DESC arrayElementBindingDesc = {};
+					pShaderReflection->GetResourceBindingDesc(j, &arrayElementBindingDesc);
+
+					// strncmp：Equal returns 0
+					if (strncmp(name.c_str(), arrayElementBindingDesc.Name, openBracketPos) == 0 && arrayElementBindingDesc.Name[openBracketPos] == '[')
+					{
+						// Convert a string to an int, the number of the string can contain other characters without affecting the result,
+						// this function will not throw an exception
+						UINT index = atoi(arrayElementBindingDesc.Name + openBracketPos + 1);
+						bindCount = std::max(bindCount, index + 1);
+
+						++skipCount;
+					}
+					// end
+					else
+					{
+						break;
+					}
+				}
+			}
+			std::unique_ptr<ShaderResourceAttribs> shaderResourceAttribs = std::make_unique<ShaderResourceAttribs>(name, bindingDesc.BindPoint,
+				bindCount, bindingDesc.Type, bindingDesc.Dimension);
+			// SIT: Shader Input Type
+			switch (bindingDesc.Type)
+			{
+			case D3D_SIT_CBUFFER:
+				m_CBs.push_back(std::move(shaderResourceAttribs));
+				break;
+			case D3D_SIT_TEXTURE:
+				if (bindingDesc.Dimension == D3D_SRV_DIMENSION_BUFFER)
+				{
+					m_BufferSRVs.push_back(std::move(shaderResourceAttribs));
+				}
+				else
+				{
+					m_TextureSRVs.push_back(std::move(shaderResourceAttribs));
+				}
+				break;
+			case D3D_SIT_UAV_RWTYPED:
+				if (bindingDesc.Dimension == D3D_SRV_DIMENSION_BUFFER)
+				{
+					m_BufferUAVs.push_back(std::move(shaderResourceAttribs));
+				}
+				else
+				{
+					m_TextureUAVs.push_back(std::move(shaderResourceAttribs));
+				}
+				break;
+			case D3D_SIT_STRUCTURED:
+			case D3D_SIT_BYTEADDRESS:
+				m_BufferSRVs.push_back(std::move(shaderResourceAttribs));
+				break;
+			case D3D_SIT_UAV_RWSTRUCTURED:
+			case D3D_SIT_UAV_RWBYTEADDRESS:
+				m_BufferUAVs.push_back(std::move(shaderResourceAttribs));
+				break;
+			default:
+				LOG_ERROR("Not Supported Resource Type.");
+				break;
+			}
+		}
+
+		// TODO TEXTURE SAMPLER 
 	}
 
 	size_t ShaderResource::GetHash() const
