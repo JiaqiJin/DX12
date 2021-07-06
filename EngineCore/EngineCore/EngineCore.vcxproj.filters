@@ -105,6 +105,9 @@
     <ClCompile Include="D3D12RHI\ShaderObject\ShaderResourceLayout.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="D3D12RHI\ShaderObject\ShaderResourceCache.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -243,6 +246,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="D3D12RHI\ShaderObject\ShaderResourceLayout.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D12RHI\ShaderObject\ShaderResourceCache.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

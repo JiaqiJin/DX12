@@ -14,7 +14,6 @@ namespace RHI
 		m_D3D12Device(pd3d12Device)
 	{
 		// Determine RootIndex and OffsetFromTableStart through RootSignature for each resource in ShaderResource, and then store it
-		
 		auto AddResource = [&](const ShaderResourceAttribs& Attribs, BindingResourceType ResType, SHADER_RESOURCE_VARIABLE_TYPE VarType)
 		{
 			assert(rootSignature != nullptr);
