@@ -72,7 +72,7 @@ namespace RHI
 	struct ShaderVariableConfig;
 	class RootSignature;
 
-	// Define mappings between shader resource and descriptor in descriptor table.
+	// Define mappings between shader resource and descriptor in descriptor table. Contain reference to the instance of ShaderResourceCache.
 	// HLSL shader registers are first mapped to descriptor in descriptor table as defined by Root Signature.
 	// Descriptor then reference actual resource in GPU memory
 	class ShaderResourceLayout
@@ -102,7 +102,7 @@ namespace RHI
 
 			}
 
-			bool IsBound();
+			// bool IsBound();
 
 			Resource(const Resource&) = delete;
 			Resource(Resource&&) = delete;
@@ -117,7 +117,22 @@ namespace RHI
 			const UINT32 OffsetFromTableStart;
 		};
 
+		UINT32 GetCbvSrvUavCount(SHADER_RESOURCE_VARIABLE_TYPE VarType) const
+		{
+			return m_SrvCbvUavs[VarType].size();
+		}
+
+		// IndexInArray is the index of this D3D12Resource in the array, not RootIndex,
+		// because there may be multiple D3D12Resources with the same RootIndex
+		const Resource& GetSrvCbvUav(SHADER_RESOURCE_VARIABLE_TYPE VarType, UINT32 indexInArray) const
+		{
+			return *m_SrvCbvUavs[VarType][indexInArray].get();
+		}
+
 	private:
 		ID3D12Device* m_D3D12Device;
+
+		// All resources in the Shader are divided into three vectors according to the update frequency
+		std::vector<std::unique_ptr<Resource>> m_SrvCbvUavs[SHADER_RESOURCE_VARIABLE_TYPE_NUM_TYPES];
 	};
 }
