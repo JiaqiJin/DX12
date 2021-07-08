@@ -167,6 +167,9 @@
     <ClCompile Include="D3D12RHI\Shader.cpp" />
     <ClCompile Include="D3D12RHI\ShaderObject\ShaderResource.cpp" />
     <ClCompile Include="Common\StaleResourceWrapper.cpp" />
+    <ClCompile Include="D3D12RHI\ShaderObject\ShaderResourceBindingUtility.cpp" />
+    <ClCompile Include="D3D12RHI\ShaderObject\ShaderResourceCache.cpp" />
+    <ClCompile Include="D3D12RHI\ShaderObject\ShaderResourceLayout.cpp" />
     <ClCompile Include="D3D12RHI\VariableSizeAllocationsManager.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Math\Random.cpp" />
@@ -201,6 +204,9 @@
     <ClInclude Include="D3D12RHI\Shader.h" />
     <ClInclude Include="D3D12RHI\ShaderObject\ShaderResource.h" />
     <ClInclude Include="Common\StaleResourceWrapper.h" />
+    <ClInclude Include="D3D12RHI\ShaderObject\ShaderResourceBindingUtility.h" />
+    <ClInclude Include="D3D12RHI\ShaderObject\ShaderResourceCache.h" />
+    <ClInclude Include="D3D12RHI\ShaderObject\ShaderResourceLayout.h" />
     <ClInclude Include="D3D12RHI\VariableSizeAllocationsManager.h" />
     <ClInclude Include="Math\BoundingPlane.h" />
     <ClInclude Include="Math\BoundingSphere.h" />

@@ -14,6 +14,20 @@ namespace RHI
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC GraphicPipelineState;
 	};
 
+	struct ShaderResourceVariableDesc
+	{
+		SHADER_TYPE ShaderType = SHADER_TYPE_UNKNOWN;
+		std::string Name;
+		SHADER_RESOURCE_VARIABLE_TYPE Type;
+	};
+
+	struct ShaderVariableConfig
+	{
+		SHADER_RESOURCE_VARIABLE_TYPE DefaultVariableType = SHADER_RESOURCE_VARIABLE_TYPE_STATIC;
+
+		std::vector<ShaderResourceVariableDesc> Variables;
+	};
+
 	struct PipelineStateDesc
 	{
 		std::wstring Name = L"Default PSO";

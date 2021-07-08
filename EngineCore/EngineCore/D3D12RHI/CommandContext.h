@@ -69,6 +69,9 @@ namespace RHI
 		void TransitionResource(GpuResource& Resource, D3D12_RESOURCE_STATES NewState, bool FlushImmediate = false);
 		inline void FlushResourceBarriers(void);
 
+		// Dynamic Descriptor is allocated on GPUDescriptorHeap and released in Finish
+		DescriptorHeapAllocation AllocateDynamicGPUVisibleDescriptor(UINT Count = 1);
+
 		// Dynamic resource Allocate
 		D3D12DynamicAllocation AllocateDynamicSpace(size_t NumBytes, size_t Alignment);
 	private:
@@ -108,34 +111,35 @@ namespace RHI
 			return CommandContext::Begin(ID).GetGraphicsContext();
 		}
 
-		//void ClearColor(D3D12_RECT* Rect = nullptr);
-		//void ClearColor(D3D12_RECT* Rect = nullptr);
-		//void ClearDepth();
-		//void ClearStencil();
-		//void ClearDepthAndStencil();
+		// Clear
+		void ClearColor(GpuResourceDescriptor& RTV, D3D12_RECT* Rect = nullptr);
+		void ClearColor(GpuResourceDescriptor& RTV, Color Colour, D3D12_RECT* Rect = nullptr);
+		void ClearDepth(GpuResourceDescriptor& DSV);
+		void ClearStencil(GpuResourceDescriptor& DSV);
+		void ClearDepthAndStencil(GpuResourceDescriptor& DSV);
 
-		//void SetViewport(const D3D12_VIEWPORT& vp);
-		//void SetScissor(const D3D12_RECT& rect);
-		//void SetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY Topology);
+		void SetViewport(const D3D12_VIEWPORT& vp);
+		void SetScissor(const D3D12_RECT& rect);
+		void SetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY Topology);
 
-		//void SetRenderTargets(UINT NumRTVs);
+		void SetRenderTargets(UINT NumRTVs, GpuResourceDescriptor* RTVs[], GpuResourceDescriptor* DSV = nullptr);
 
-		//// Vertex Buffer、Index Buffer
-		//void SetVertexBuffer(UINT Slot, const D3D12_VERTEX_BUFFER_VIEW& VBView);
-		//void SetIndexBuffer(const D3D12_INDEX_BUFFER_VIEW& IBView);
+		// Vertex Buffer、Index Buffer
+		void SetVertexBuffer(UINT Slot, const D3D12_VERTEX_BUFFER_VIEW& VBView);
+		void SetIndexBuffer(const D3D12_INDEX_BUFFER_VIEW& IBView);
 
-		//// Constant Buffer
-		//void SetConstantBuffer(UINT RootIndex, D3D12_GPU_VIRTUAL_ADDRESS BufferAddress);
+		// Constant Buffer
+		void SetConstantBuffer(UINT RootIndex, D3D12_GPU_VIRTUAL_ADDRESS BufferAddress);
 
-		//// Descriptor
-		//void SetDescriptorTable(UINT RootIndex, D3D12_GPU_DESCRIPTOR_HANDLE DescriptorTable);
+		// Descriptor
+		void SetDescriptorTable(UINT RootIndex, D3D12_GPU_DESCRIPTOR_HANDLE DescriptorTable);
 
-		//void Draw(UINT VertexCount, UINT VertexStartOffset = 0);
-		//void DrawIndexed(UINT IndexCount, UINT StartIndexLocation = 0, INT BaseVertexLocation = 0);
-		//void DrawInstanced(UINT VertexCountPerInstance, UINT InstanceCount,
-		//	UINT StartVertexLocation = 0, UINT StartInstanceLocation = 0);
-		//void DrawIndexedInstanced(UINT IndexCountPerInstance, UINT InstanceCount, UINT StartIndexLocation,
-		//	INT BaseVertexLocation, UINT StartInstanceLocation);
+		void Draw(UINT VertexCount, UINT VertexStartOffset = 0);
+		void DrawIndexed(UINT IndexCount, UINT StartIndexLocation = 0, INT BaseVertexLocation = 0);
+		void DrawInstanced(UINT VertexCountPerInstance, UINT InstanceCount,
+			UINT StartVertexLocation = 0, UINT StartInstanceLocation = 0);
+		void DrawIndexedInstanced(UINT IndexCountPerInstance, UINT InstanceCount, UINT StartIndexLocation,
+			INT BaseVertexLocation, UINT StartInstanceLocation);
 	};
 
 	class ComputeContext : public CommandContext

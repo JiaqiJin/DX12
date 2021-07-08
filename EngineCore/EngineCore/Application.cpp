@@ -137,7 +137,7 @@ LRESULT Application::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             return 0;
 
         case WM_MOUSEMOVE:
-            Input::OnMouseMove(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+
             return 0;
         }
     }
