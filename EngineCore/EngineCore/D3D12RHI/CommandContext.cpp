@@ -175,6 +175,11 @@ namespace RHI
 		// TODO
 	}
 
+	DescriptorHeapAllocation CommandContext::AllocateDynamicGPUVisibleDescriptor(UINT Count /*= 1*/)
+	{
+		return m_DynamicGPUDescriptorAllocator.Allocate(Count);
+	}
+
 	D3D12DynamicAllocation CommandContext::AllocateDynamicSpace(size_t NumBytes, size_t Alignment)
 	{
 		return m_DynamicResourceHeap.Allocate(NumBytes, Alignment);

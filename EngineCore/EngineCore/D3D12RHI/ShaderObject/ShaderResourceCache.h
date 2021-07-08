@@ -105,6 +105,16 @@ namespace RHI
             return m_RootTables.at(RootIndex);
         }
 
+        // Commite Static, Mutable binding resource
+        void CommitResource(CommandContext& cmdContext);
+
+        /* Submit the resource binding of Dynamic Shader Variable and the resource of Dynamic Resource, automatically submit before each Draw
+         * Dynamic Resource is not equal to Dynamic Shader Variable, Dynamic Resource represents the frequency
+         * at which the resource itself is modified, and Dynamic Shader Variable represents the frequency at which resource binding is switched
+         * For example, the Shader Variable type of Transform's Constant Buffer is Static, but this Buffer is Dynamic Buffer
+         */
+        void CommitDynamic(CommandContext& cmdContext);
+
     private:
         // Allocation in a GPU-visible CBV/SRV/UAV descriptor heap
         DescriptorHeapAllocation m_CbvSrvUavGPUHeapSpace;
