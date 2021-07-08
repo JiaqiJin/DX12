@@ -2,6 +2,12 @@
 #include "CommandContext.h"
 #include "CommandListManager.h"
 #include "RenderDevice.h"
+#include "DescriptorHeap.h"
+#include "PipelineState.h"
+#include "GpuBuffer.h"
+#include "GpuTexture.h"
+#include "DynamicResource.h"
+#include "GpuResourceDescriptor.h"
 
 namespace RHI
 {
@@ -173,5 +179,138 @@ namespace RHI
 	{
 		return m_DynamicResourceHeap.Allocate(NumBytes, Alignment);
 	}
+
+	// ------------------ Graphic Context ---------------------
+	void GraphicsContext::ClearColor(GpuResourceDescriptor& RTV, D3D12_RECT* Rect /*= nullptr*/)
+	{
+		FlushResourceBarriers();
+
+		const GpuResource* resource = RTV.GetResource();
+		const GpuRenderTextureColor* rt = dynamic_cast<const GpuRenderTextureColor*>(resource);
+		if (rt != nullptr)
+			m_CommandList->ClearRenderTargetView(RTV.GetCpuHandle(), rt->GetClearColor().GetPtr(), (Rect == nullptr) ? 0 : 1, Rect);
+	}
+
+	void GraphicsContext::ClearColor(GpuResourceDescriptor& RTV, Color Colour, D3D12_RECT* Rect /*= nullptr*/)
+	{
+		FlushResourceBarriers();
+
+		const GpuResource* resource = RTV.GetResource();
+		const GpuRenderTextureColor* rt = dynamic_cast<const GpuRenderTextureColor*>(resource);
+		if (rt != nullptr)
+			m_CommandList->ClearRenderTargetView(RTV.GetCpuHandle(), Colour.GetPtr(), (Rect == nullptr) ? 0 : 1, Rect);
+	}
+
+	void GraphicsContext::ClearDepth(GpuResourceDescriptor& DSV)
+	{
+		FlushResourceBarriers();
+
+		const GpuResource* resource = DSV.GetResource();
+		const GpuRenderTextureDepth* depth = dynamic_cast<const GpuRenderTextureDepth*>(resource);
+		if (depth != nullptr)
+			m_CommandList->ClearDepthStencilView(DSV.GetCpuHandle(), D3D12_CLEAR_FLAG_DEPTH, depth->GetClearDepth(), depth->GetClearStencil(), 0, nullptr);
+	}
+
+	void GraphicsContext::ClearStencil(GpuResourceDescriptor& DSV)
+	{
+		FlushResourceBarriers();
+
+		const GpuResource* resource = DSV.GetResource();
+		const GpuRenderTextureDepth* depth = dynamic_cast<const GpuRenderTextureDepth*>(resource);
+		if (depth != nullptr)
+			m_CommandList->ClearDepthStencilView(DSV.GetCpuHandle(), D3D12_CLEAR_FLAG_STENCIL, depth->GetClearDepth(), depth->GetClearStencil(), 0, nullptr);
+	}
+
+	void GraphicsContext::ClearDepthAndStencil(GpuResourceDescriptor& DSV)
+	{
+		FlushResourceBarriers();
+
+		const GpuResource* resource = DSV.GetResource();
+		const GpuRenderTextureDepth* depth = dynamic_cast<const GpuRenderTextureDepth*>(resource);
+		if (depth != nullptr)
+			m_CommandList->ClearDepthStencilView(DSV.GetCpuHandle(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, depth->GetClearDepth(), depth->GetClearStencil(), 0, nullptr);
+	}
+
+	void GraphicsContext::SetViewport(const D3D12_VIEWPORT& vp)
+	{
+		m_CommandList->RSSetViewports(1, &vp);
+	}
+
+	void GraphicsContext::SetScissor(const D3D12_RECT& rect)
+	{
+		assert(rect.left < rect.right&& rect.top < rect.bottom);
+		m_CommandList->RSSetScissorRects(1, &rect);
+	}
+
+	void GraphicsContext::SetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY Topology)
+	{
+		m_CommandList->IASetPrimitiveTopology(Topology);
+	}
+
+	void GraphicsContext::SetRenderTargets(UINT NumRTVs, GpuResourceDescriptor* RTVs[], GpuResourceDescriptor* DSV /*= nullptr*/)
+	{
+		std::unique_ptr<D3D12_CPU_DESCRIPTOR_HANDLE[]> RTVHandles = nullptr;
+		D3D12_CPU_DESCRIPTOR_HANDLE DSVHandle;
+
+		if (NumRTVs > 0)
+		{
+			RTVHandles.reset(new D3D12_CPU_DESCRIPTOR_HANDLE[NumRTVs]);
+			for (INT32 i = 0; i < NumRTVs; ++i)
+			{
+				RTVHandles[i] = RTVs[i]->GetCpuHandle();
+			}
+		}
+
+		if (DSV != nullptr)
+		{
+			DSVHandle = DSV->GetCpuHandle();
+			m_CommandList->OMSetRenderTargets(NumRTVs, RTVHandles.get(), FALSE, &DSVHandle);
+		}
+		else
+		{
+			m_CommandList->OMSetRenderTargets(NumRTVs, RTVHandles.get(), FALSE, nullptr);
+		}
+	}
+
+	void GraphicsContext::SetVertexBuffer(UINT Slot, const D3D12_VERTEX_BUFFER_VIEW& VBView)
+	{
+		m_CommandList->IASetVertexBuffers(Slot, 1, &VBView);
+	}
+
+	void GraphicsContext::SetIndexBuffer(const D3D12_INDEX_BUFFER_VIEW& IBView)
+	{
+		m_CommandList->IASetIndexBuffer(&IBView);
+	}
+
+	void GraphicsContext::SetConstantBuffer(UINT RootIndex, D3D12_GPU_VIRTUAL_ADDRESS BufferAddress)
+	{
+		m_CommandList->SetGraphicsRootConstantBufferView(RootIndex, BufferAddress);
+	}
+
+	void GraphicsContext::SetDescriptorTable(UINT RootIndex, D3D12_GPU_DESCRIPTOR_HANDLE DescriptorTable)
+	{
+		m_CommandList->SetGraphicsRootDescriptorTable(RootIndex, DescriptorTable);
+	}
+
+	void GraphicsContext::Draw(UINT VertexCount, UINT VertexStartOffset /*= 0*/)
+	{
+		DrawInstanced(VertexCount, 1, VertexStartOffset, 0);
+	}
+
+	void GraphicsContext::DrawIndexed(UINT IndexCount, UINT StartIndexLocation /*= 0*/, INT BaseVertexLocation /*= 0*/)
+	{
+		DrawIndexedInstanced(IndexCount, 1, StartIndexLocation, BaseVertexLocation, 0);
+	}
+
+	void GraphicsContext::DrawInstanced(UINT VertexCountPerInstance, UINT InstanceCount, UINT StartVertexLocation /*= 0*/, UINT StartInstanceLocation /*= 0*/)
+	{
+		// TODO
+	}
+
+	void GraphicsContext::DrawIndexedInstanced(UINT IndexCountPerInstance, UINT InstanceCount, UINT StartIndexLocation, INT BaseVertexLocation, UINT StartInstanceLocation)
+	{
+		// TODO
+	}
+
 
 }

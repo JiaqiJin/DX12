@@ -52,6 +52,8 @@ namespace RHI
 		std::shared_ptr<GpuResourceDescriptor> CreateRTV();
 		std::shared_ptr<GpuResourceDescriptor> CreateUAV();
 
+		Color GetClearColor() const { return m_ClearColor; }
+
 	protected:
 		Color m_ClearColor;
 	};
@@ -64,6 +66,9 @@ namespace RHI
 		std::shared_ptr<GpuResourceDescriptor> CreateDSV();
 		std::shared_ptr<GpuResourceDescriptor> CreateDepthSRV();
 		std::shared_ptr<GpuResourceDescriptor> CreateStencilSRV();
+
+		float GetClearDepth() const { return m_ClearDepth; }
+		UINT8 GetClearStencil() const { return m_ClearStencil; }
 	protected:
 		float m_ClearDepth;
 		UINT8 m_ClearStencil;
