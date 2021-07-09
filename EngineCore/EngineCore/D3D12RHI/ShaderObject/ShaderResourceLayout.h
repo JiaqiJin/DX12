@@ -108,6 +108,10 @@ namespace RHI
 			Resource& operator = (const Resource&) = delete;
 			Resource& operator = (Resource&&) = delete;
 
+			static constexpr UINT32 InvalidSamplerId = -1;
+			static constexpr UINT32 InvalidRootIndex = -1;
+			static constexpr UINT32 InvalidOffset = -1;
+
 			bool IsBound(UINT32 arrayIndex, const ShaderResourceCache& resourceCache) const;
 
 			void BindResource(std::shared_ptr<GpuBuffer> buffer, UINT32 arrayIndex, ShaderResourceCache& resourceCache) const;

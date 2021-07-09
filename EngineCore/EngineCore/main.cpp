@@ -160,4 +160,5 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	mRootSignature->lpVtbl->Release(mRootSignature);
 	return 0;
 }
+https://github.com/DiligentGraphics/DiligentCore/tree/ac5ba64bd9afd46d85897ac77c44bbd4df0ed0da
 */

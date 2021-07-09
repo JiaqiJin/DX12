@@ -144,6 +144,69 @@ namespace RHI
 		ThrowIfFailed(pd3d12Device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(m_pd3d12RootSignature.GetAddressOf())));
 	}
 
+	void RootSignature::AllocateResourceSlot(SHADER_TYPE ShaderType,
+		PIPELINE_TYPE PipelineType,
+		const ShaderResourceAttribs& ShaderResAttribs,
+		SHADER_RESOURCE_VARIABLE_TYPE VariableType,
+		D3D12_DESCRIPTOR_RANGE_TYPE RangeType,
+		UINT32& RootIndex,				
+		UINT32& OffsetFromTableStart)	
+	{
+		const D3D12_SHADER_VISIBILITY shaderVisibility = GetShaderVisibility(ShaderType);
+
+		// Assign a CBV as a Root Descriptor
+		if (RangeType == D3D12_DESCRIPTOR_RANGE_TYPE_CBV && ShaderResAttribs.BindCount == 1)
+		{
+			RootIndex = m_RootParams.GetRootTableNum() + m_RootParams.GetRootDescriptorNum();
+			OffsetFromTableStart = 0;
+
+			m_RootParams.AddRootDescriptor(D3D12_ROOT_PARAMETER_TYPE_CBV, RootIndex, ShaderResAttribs.BindPoint, shaderVisibility, VariableType);
+		}
+		// Assign a new Root Table, or add Descriptor to the existing Root Table
+		else
+		{
+			const INT32 ShaderInd = GetShaderTypePipelineIndex(ShaderType, PipelineType);
+			assert(ShaderInd != -1);
+			// Grouped according to the update frequency of the resources, Static, Mutable, and Dynamic resources
+			// are placed in three Tables respectively
+			const INT32 TableIndKey = ShaderInd * SHADER_RESOURCE_VARIABLE_TYPE_NUM_TYPES + VariableType;
+			// m_SrvCbvUavRootTablesMap stores the index of the specified type of Root Table in m_RootParams.m_RootTables
+			UINT8& RootTableArrayInd = m_SrvCbvUavRootTablesMap[TableIndKey];
+
+			if (RootTableArrayInd == InvalidRootTableIndex)
+			{
+				// The Table has not been created yet, create a new Root Table
+				RootIndex = m_RootParams.GetRootTableNum() + m_RootParams.GetRootDescriptorNum();
+				RootTableArrayInd = static_cast<UINT8>(m_RootParams.GetRootTableNum());
+				// Add a Root Table with Descriptor Range
+				m_RootParams.AddRootTable(RootIndex, shaderVisibility, VariableType, 1);
+			}
+			else
+			{
+				m_RootParams.AddDescriptorRanges(RootTableArrayInd, 1);
+			}
+
+			// Root Table just created or just used
+			auto& RootTable = m_RootParams.GetRootTable(RootTableArrayInd);
+			RootIndex = RootTable.GetRootIndex();
+
+			const auto& d3d12RootParam = static_cast<const D3D12_ROOT_PARAMETER&>(RootTable);
+
+			assert(d3d12RootParam.ShaderVisibility == shaderVisibility && "Shader visibility is not correct");
+			// Descriptors are closely arranged, so the Offset of the Descriptor to be added is the number of Descriptors before adding
+			// When AddDescriptorRanges is called, GetDescriptorTableSize has not increased
+			OffsetFromTableStart = RootTable.GetDescriptorTableSize();
+
+			UINT32 NewDescriptorRangeIndex = d3d12RootParam.DescriptorTable.NumDescriptorRanges - 1; 
+			RootTable.SetDescriptorRange(NewDescriptorRangeIndex,
+				RangeType,
+				ShaderResAttribs.BindPoint,
+				ShaderResAttribs.BindCount,
+				0,
+				OffsetFromTableStart);
+		}
+	}
+
 	RootSignature::~RootSignature()
 	{
 		if (m_pd3d12RootSignature)

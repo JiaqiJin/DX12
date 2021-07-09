@@ -12,6 +12,10 @@
 * Exampler DR : DescRange[0].Init(D3D12_DESCRIPTOR_RANGE_SRV,6,2); DescRange[1].Init(D3D12_DESCRIPTOR_RANGE_UAV,4,0);
 */
 
+#include "ShaderObject/ShaderResource.h"
+#include "ShaderObject/ShaderResourceCache.h"
+#include "ShaderObject/ShaderResourceBindingUtility.h"
+
 namespace RHI
 {
 	class RenderDevice;
@@ -266,7 +270,13 @@ namespace RHI
         void Finalize(ID3D12Device* pd3d12Device);
 
         // Allocated for each ShaderResource in the Shader
-        // TODO
+        void AllocateResourceSlot(SHADER_TYPE                     ShaderType,
+            PIPELINE_TYPE                   PipelineType,
+            const ShaderResourceAttribs& ShaderResAttribs,
+            SHADER_RESOURCE_VARIABLE_TYPE   VariableType,
+            D3D12_DESCRIPTOR_RANGE_TYPE     RangeType,
+            UINT32& RootIndex,
+            UINT32& OffsetFromTableStart);
 
         // The total number of all Descriptors in the RootTable of VarType type
         UINT32 GetNumDescriptorInRootTable(SHADER_RESOURCE_VARIABLE_TYPE VarType) const

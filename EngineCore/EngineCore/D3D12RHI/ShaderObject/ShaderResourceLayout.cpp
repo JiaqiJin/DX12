@@ -18,7 +18,17 @@ namespace RHI
 		{
 			assert(rootSignature != nullptr);
 
-			// TODO
+			UINT32 RootIndex = Resource::InvalidRootIndex;
+			UINT32 Offset = Resource::InvalidOffset;
+
+			D3D12_DESCRIPTOR_RANGE_TYPE DescriptorRangeType = GetDescriptorRangeType(ResType);
+			SHADER_TYPE shaderType = shaderResource->GetShaderType();
+
+			// Add to RootSignature in the order in ShaderResource, and assign RootIndex and Offset
+			rootSignature->AllocateResourceSlot(shaderType, pipelineType, Attribs, VarType, DescriptorRangeType, RootIndex, Offset);
+
+			std::unique_ptr<Resource> resource = std::make_unique<Resource>(Attribs, VarType, ResType, RootIndex, Offset);
+			m_SrvCbvUavs[VarType].push_back(std::move(resource));
 		};
 
 		shaderResource->ProcessResources(
