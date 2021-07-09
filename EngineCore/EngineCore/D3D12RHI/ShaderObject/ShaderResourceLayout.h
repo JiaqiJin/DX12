@@ -1,5 +1,6 @@
 #pragma once
 #include "ShaderResource.h"
+#include "ShaderResourceCache.h"
 #include "../GpuBuffer.h"
 #include "../GpuResourceDescriptor.h"
 
@@ -102,12 +103,15 @@ namespace RHI
 
 			}
 
-			// bool IsBound();
-
 			Resource(const Resource&) = delete;
 			Resource(Resource&&) = delete;
 			Resource& operator = (const Resource&) = delete;
 			Resource& operator = (Resource&&) = delete;
+
+			bool IsBound(UINT32 arrayIndex, const ShaderResourceCache& resourceCache) const;
+
+			void BindResource(std::shared_ptr<GpuBuffer> buffer, UINT32 arrayIndex, ShaderResourceCache& resourceCache) const;
+			void BindResource(std::shared_ptr<GpuResourceDescriptor> descriptor, UINT32 arrayIndex, ShaderResourceCache& resourceCache) const;
 
 			// Variables
 			const SHADER_RESOURCE_VARIABLE_TYPE VariableType;   // Static, Mutable, Dynamic
