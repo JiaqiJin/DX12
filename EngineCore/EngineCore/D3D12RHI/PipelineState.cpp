@@ -104,7 +104,8 @@ namespace RHI
 			rootSignatureName.append(m_Desc.Name);
 			m_RootSignature.GetD3D12RootSignature()->SetName(rootSignatureName.c_str());
 
-			//TODO
+			const static SHADER_RESOURCE_VARIABLE_TYPE staticVarType[] = { SHADER_RESOURCE_VARIABLE_TYPE_STATIC };
+			m_StaticSRB = std::make_unique<ShaderResourceBinding>(this, staticVarType, 1);
 		}
 
 		// TODO Compute Pipeline

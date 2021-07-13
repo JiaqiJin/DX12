@@ -65,6 +65,13 @@ namespace RHI
 		PipelineState(RenderDevice* renderDevice, const PipelineStateDesc& desc);
 		~PipelineState();
 
+		template<typename TOperation>
+		void ProcessShaders(TOperation Operation) const
+		{
+			for (const auto& [shaderType, shader] : m_Shaders)
+				Operation(shaderType, m_ShaderResourceLayouts.at(shaderType));
+		}
+
 		// Getters
 		ID3D12PipelineState* GetD3D12PipelineState() const	{ return m_D3D12PSO.Get(); }
 		ID3D12RootSignature* GetD3D12RootSignature() const { return m_RootSignature.GetD3D12RootSignature(); }
@@ -80,5 +87,8 @@ namespace RHI
 
 		std::unordered_map<SHADER_TYPE, std::shared_ptr<Shader>> m_Shaders;
 		std::unordered_map<SHADER_TYPE, ShaderResourceLayout> m_ShaderResourceLayouts;
+
+		// Store all Static resources, and submit Static resources when switching PSO
+		std::unique_ptr<ShaderResourceBinding> m_StaticSRB;
 	};
 }
