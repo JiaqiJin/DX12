@@ -161,4 +161,5 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	return 0;
 }
 https://github.com/DiligentGraphics/DiligentCore/tree/ac5ba64bd9afd46d85897ac77c44bbd4df0ed0da
+https://www.3dgep.com/learning-directx-12-2/#Introduction
 */

@@ -32,6 +32,7 @@ namespace RHI
     // Responsible for compiling the Shader file of HLSL
     class Shader
     {
+    public:
         Shader(const ShaderCreateInfo& shaderCI);
 
         // Getters

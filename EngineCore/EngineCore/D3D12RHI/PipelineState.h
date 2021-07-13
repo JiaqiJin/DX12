@@ -1,6 +1,12 @@
 #pragma once
 
 #include "RootSignature.h"
+#include "ShaderObject/ShaderResourceLayout.h"
+#include "ShaderObject/ShaderResourceCache.h"
+#include "ShaderObject/ShaderVariable.h"
+#include "Shader.h"
+#include "ShaderObject/ShaderResourceBinding.h"
+#include "ShaderObject/ShaderResourceBindingUtility.h"
 
 namespace RHI
 {
@@ -9,9 +15,21 @@ namespace RHI
 	// Graphic Pipeline
 	struct GraphicsPipelineDesc
 	{
-		// TODO
-		// Shaders (Vertex, Pixels, Geometry ...)
+		// Shaders Types
+		std::shared_ptr<Shader> VertexShader = nullptr;
+		std::shared_ptr<Shader> PixelShader = nullptr;
+		std::shared_ptr<Shader> DomainShader = nullptr;
+		std::shared_ptr<Shader> HullShader = nullptr;
+		std::shared_ptr<Shader> GeometryShader = nullptr;
+		std::shared_ptr<Shader> AmplificationShader = nullptr;
+		std::shared_ptr<Shader> MeshShader = nullptr;
+
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC GraphicPipelineState;
+	};
+
+	struct ComputePipelineDesc
+	{
+		Shader* ComputeShader;
 	};
 
 	struct ShaderResourceVariableDesc
@@ -34,7 +52,11 @@ namespace RHI
 
 		PIPELINE_TYPE PipelineType;
 
+		ShaderVariableConfig VariableConfig;
+
 		GraphicsPipelineDesc GraphicsPipeline;
+
+		ComputePipelineDesc ComputePipeline;
 	};
 
 	class PipelineState
@@ -55,5 +77,8 @@ namespace RHI
 		RootSignature m_RootSignature;
 		RenderDevice* m_RenderDevice;
 		PipelineStateDesc m_Desc;
+
+		std::unordered_map<SHADER_TYPE, std::shared_ptr<Shader>> m_Shaders;
+		std::unordered_map<SHADER_TYPE, ShaderResourceLayout> m_ShaderResourceLayouts;
 	};
 }
