@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "ShaderResourceLayout.h"
 #include "ShaderResourceCache.h"
 #include "../GpuBuffer.h"
@@ -64,6 +64,8 @@ namespace RHI
 		ShaderVariable* GetVariable(UINT32 index);
 		UINT32 GetVariableCount() const { return m_Variables.size(); }
 	private:
+		friend ShaderVariable;
+
 		ShaderResourceCache* m_ResourceCache;
 		std::vector<std::unique_ptr<ShaderVariable>> m_Variables;
 	};

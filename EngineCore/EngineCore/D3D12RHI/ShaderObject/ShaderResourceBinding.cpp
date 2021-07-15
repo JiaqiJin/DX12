@@ -17,7 +17,11 @@ namespace RHI
 
 		m_PSO->ProcessShaders([&](SHADER_TYPE shaderType, const ShaderResourceLayout& layout)
 		{
-				// TODO
+				std::unique_ptr<ShaderVariableCollection> variables = std::make_unique<ShaderVariableCollection>(&m_ShaderResourceCache,
+					layout,
+					allowedVarTypes,
+					allowedTypeNum);
+				m_ShaderVariableManagers.emplace(shaderType, std::move(variables));
 		});
 	}
 
@@ -25,4 +29,30 @@ namespace RHI
 	{
 	}
 
+	ShaderVariable* ShaderResourceBinding::GetVariableByName(SHADER_TYPE ShaderType, const std::string& Name)
+	{
+		auto iter = m_ShaderVariableManagers.find(ShaderType);
+		if (iter == m_ShaderVariableManagers.end())
+			return nullptr;
+
+		return iter->second->GetVariable(Name);
+	}
+
+	UINT32 ShaderResourceBinding::GetVariableCount(SHADER_TYPE ShaderType) const
+	{
+		auto iter = m_ShaderVariableManagers.find(ShaderType);
+		if (iter == m_ShaderVariableManagers.end())
+			return 0;
+
+		return iter->second->GetVariableCount();
+	}
+
+	ShaderVariable* ShaderResourceBinding::GetVariableByIndex(SHADER_TYPE ShaderType, UINT32 Index)
+	{
+		auto iter = m_ShaderVariableManagers.find(ShaderType);
+		if (iter == m_ShaderVariableManagers.end())
+			return nullptr;
+
+		return iter->second->GetVariable(Index);
+	}
 }

@@ -108,10 +108,10 @@
     <ClCompile Include="D3D12RHI\ShaderObject\ShaderResourceCache.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="D3D12RHI\ShaderObject\ShaderVariable.cpp">
+    <ClCompile Include="D3D12RHI\ShaderObject\ShaderResourceBinding.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="D3D12RHI\ShaderObject\ShaderResourceBinding.cpp">
+    <ClCompile Include="D3D12RHI\ShaderObject\ShaderVariable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -257,10 +257,10 @@
     <ClInclude Include="D3D12RHI\ShaderObject\ShaderResourceCache.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="D3D12RHI\ShaderObject\ShaderVariable.h">
+    <ClInclude Include="D3D12RHI\ShaderObject\ShaderResourceBinding.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="D3D12RHI\ShaderObject\ShaderResourceBinding.h">
+    <ClInclude Include="D3D12RHI\ShaderObject\ShaderVariable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
