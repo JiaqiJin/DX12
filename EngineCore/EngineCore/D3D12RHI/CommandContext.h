@@ -35,7 +35,7 @@ namespace RHI
 	* A new CommandAllocator will be requested at Begin and this allocator will
 	* recycled at the End.
 	*/
-	class CommandContext
+	class CommandContext 
 	{
 		friend class CommandContextManager;
 	public:
@@ -47,8 +47,12 @@ namespace RHI
 
 		// Begin function : creating a command.
 		static CommandContext& Begin(const std::wstring ID = L"");
+		// Flush existing command to the GPU but keep the context alive
+		uint64_t Flush(bool WaitForCompletion = false);
+		// Finish Recording
 		uint64_t Finish(bool WaitForCompletion = false, bool releaseDynamic = false);
 
+		// Graphic Context
 		GraphicsContext& GetGraphicsContext()
 		{
 			assert(m_Type != D3D12_COMMAND_LIST_TYPE_COMPUTE && "Cannot convert async compute context to graphics");
@@ -99,6 +103,10 @@ namespace RHI
 		DynamicResourceHeap m_DynamicResourceHeap;
 
 		std::wstring m_ID;
+
+		// Flush Resource Barrier reaches 16 
+		D3D12_RESOURCE_BARRIER m_ResourceBarrierBuffer[16];
+		UINT m_NumBarriersToFlush;
 	};
 
 	// Encapsule the list of commands for rendering (command list for exuction, for setting and clearing the pipeline state). 

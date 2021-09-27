@@ -84,6 +84,23 @@ namespace RHI
 		return *newContext;
 	}
 
+	uint64_t CommandContext::Flush(bool WaitForCompletion = false)
+	{
+		// Flush resource
+		FlushResourceBarriers();
+
+		assert(m_CurrentAllocator != nullptr);
+
+		uint64_t FenceValue = CommandListManager::GetSingleton().GetQueue(m_Type).ExecuteCommandList(m_CommandList.Get());
+
+		if (WaitForCompletion)
+			CommandListManager::GetSingleton().WaitForFence(FenceValue, m_Type);
+
+		m_CommandList->Reset(m_CurrentAllocator, nullptr);
+
+		return FenceValue;
+	}
+
 	uint64_t CommandContext::Finish(bool WaitForCompletion, bool releaseDynamic)
 	{
 		assert(m_Type == D3D12_COMMAND_LIST_TYPE_DIRECT || m_Type == D3D12_COMMAND_LIST_TYPE_COMPUTE);
@@ -170,9 +187,15 @@ namespace RHI
 		// TODO
 	}
 
+	// https://docs.microsoft.com/en-us/windows/win32/direct3d12/using-resource-barriers-to-synchronize-resource-states-in-direct3d-12
+	// Applications should batch multiple transitions into one API call wherever possible. 
 	void CommandContext::FlushResourceBarriers()
 	{
-		// TODO
+		if (m_NumBarriersToFlush > 0)
+		{
+			m_CommandList->ResourceBarrier(m_NumBarriersToFlush, m_ResourceBarrierBuffer);
+			m_NumBarriersToFlush = 0;
+		}
 	}
 
 	DescriptorHeapAllocation CommandContext::AllocateDynamicGPUVisibleDescriptor(UINT Count /*= 1*/)
@@ -316,6 +339,4 @@ namespace RHI
 	{
 		// TODO
 	}
-
-
 }
