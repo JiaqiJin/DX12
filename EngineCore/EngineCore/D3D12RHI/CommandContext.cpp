@@ -73,7 +73,8 @@ namespace RHI
 		m_CurrentAllocator = CommandListManager::GetSingleton().GetQueue(m_Type).RequestAllocator();
 		m_CommandList->Reset(m_CurrentAllocator, nullptr);
 
-		// TODO
+		m_CurSRB = nullptr;
+		m_CurPSO = nullptr;
 	}
 
 	CommandContext& CommandContext::Begin(const std::wstring ID)
@@ -184,7 +185,40 @@ namespace RHI
 
 	void CommandContext::TransitionResource(GpuResource& Resource, D3D12_RESOURCE_STATES NewState, bool FlushImmediate /*= false*/)
 	{
-		// TODO
+		D3D12_RESOURCE_STATES OldState = Resource.m_UsageState;
+
+		if (m_Type == D3D12_COMMAND_LIST_TYPE_COMPUTE)
+		{
+			assert((OldState & VALID_COMPUTE_QUEUE_RESOURCE_STATES) == OldState);
+			assert((NewState & VALID_COMPUTE_QUEUE_RESOURCE_STATES) == NewState);
+		}
+
+		if (OldState != NewState)
+		{
+			assert(m_NumBarriersToFlush < 16 && "Exceeded arbitrary limit on buffered barriers");
+			D3D12_RESOURCE_BARRIER& BarrierDesc = m_ResourceBarrierBuffer[m_NumBarriersToFlush++];
+			BarrierDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+			BarrierDesc.Transition.pResource = Resource.GetResource();
+			BarrierDesc.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+			BarrierDesc.Transition.StateBefore = OldState;
+			BarrierDesc.Transition.StateAfter = NewState;
+
+			// Check to see if we already started the transition
+			if (NewState == Resource.m_TransitioningState)
+			{
+				BarrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_END_ONLY;
+				Resource.m_TransitioningState = (D3D12_RESOURCE_STATES)-1;
+			}
+			else
+			{
+				BarrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+			}
+
+			Resource.m_UsageState = NewState;
+		}
+
+		if (FlushImmediate || m_NumBarriersToFlush == 16)
+			FlushResourceBarriers();
 	}
 
 	// https://docs.microsoft.com/en-us/windows/win32/direct3d12/using-resource-barriers-to-synchronize-resource-states-in-direct3d-12

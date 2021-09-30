@@ -96,6 +96,10 @@ namespace RHI
 		Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> m_CommandList;
 		ID3D12CommandAllocator* m_CurrentAllocator;
 
+		// Resource Binding
+		PipelineState* m_CurPSO = nullptr;
+		ShaderResourceBinding* m_CurSRB = nullptr;
+
 		// Dynamic Descriptor
 		DynamicSuballocationsManager m_DynamicGPUDescriptorAllocator;
 
