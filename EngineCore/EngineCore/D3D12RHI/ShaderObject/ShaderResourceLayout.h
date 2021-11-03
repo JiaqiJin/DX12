@@ -127,7 +127,7 @@ namespace RHI
 
 		UINT32 GetCbvSrvUavCount(SHADER_RESOURCE_VARIABLE_TYPE VarType) const
 		{
-			return m_SrvCbvUavs[VarType].size();
+			return static_cast<UINT32>(m_SrvCbvUavs[VarType].size());
 		}
 
 		// IndexInArray is the index of this D3D12Resource in the array, not RootIndex,

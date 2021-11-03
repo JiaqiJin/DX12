@@ -3,6 +3,8 @@
 #include "GpuTexture.h"
 #include "DescriptorHeap.h"
 #include "DynamicResource.h"
+#include "PipelineState.h"
+#include "ShaderObject/ShaderResourceBinding.h"
 
 namespace RHI
 {

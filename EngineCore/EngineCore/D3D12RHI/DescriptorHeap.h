@@ -11,6 +11,7 @@
 */
 // http://diligentgraphics.com/diligent-engine/architecture/d3d12/managing-descriptor-heaps/
 // https://www.codeproject.com/Articles/1180619/Managing-Descriptor-Heaps-in-Direct-D
+
 namespace RHI
 {
 	class RenderDevice;

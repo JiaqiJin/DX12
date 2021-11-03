@@ -62,7 +62,7 @@ namespace RHI
 		// Getters
 		ShaderVariable* GetVariable(const std::string& name);
 		ShaderVariable* GetVariable(UINT32 index);
-		UINT32 GetVariableCount() const { return m_Variables.size(); }
+		UINT32 GetVariableCount() const { return static_cast<UINT32>(m_Variables.size()); }
 	private:
 		friend ShaderVariable;
 

@@ -85,7 +85,7 @@ namespace RHI
 		return *newContext;
 	}
 
-	uint64_t CommandContext::Flush(bool WaitForCompletion = false)
+	uint64_t CommandContext::Flush(bool WaitForCompletion)
 	{
 		// Flush resource
 		FlushResourceBarriers();
@@ -317,7 +317,7 @@ namespace RHI
 		if (NumRTVs > 0)
 		{
 			RTVHandles.reset(new D3D12_CPU_DESCRIPTOR_HANDLE[NumRTVs]);
-			for (INT32 i = 0; i < NumRTVs; ++i)
+			for (size_t i = 0; i < NumRTVs; ++i)
 			{
 				RTVHandles[i] = RTVs[i]->GetCpuHandle();
 			}
